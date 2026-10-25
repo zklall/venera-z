@@ -448,6 +448,10 @@ class _ReaderScaffoldState extends State<_ReaderScaffold> {
           icon: const Icon(Icons.menu_book_outlined),
           enabled: context.reader.canShiftImages,
           onSelected: (value) {
+            if (value == 'pair') {
+              openSpreadPairPicker();
+              return;
+            }
             final reader = context.reader;
             final start = reader.imageLayout.range(reader.page).$1;
             final kind =
@@ -463,14 +467,15 @@ class _ReaderScaffoldState extends State<_ReaderScaffold> {
               this.context.reader.page,
             );
             return [
-              if (end - start == 2) ...[
+              if (this.context.reader.images!.length >= 2)
                 CheckedPopupMenuItem<String>(
                   value: 'pair',
                   checked: this.context.reader.joinedSpreadPairs.contains(
                     start,
                   ),
-                  child: Text('Keep these pages as a spread'.tl),
+                  child: Text('Choose two pages for a spread'.tl),
                 ),
+              if (end - start == 2) ...[
                 CheckedPopupMenuItem<String>(
                   value: 'alignedPair',
                   checked: this.context.reader.alignedSpreadPairs.contains(
@@ -965,6 +970,51 @@ class _ReaderScaffoldState extends State<_ReaderScaffold> {
         ),
       ),
     );
+  }
+
+  void openSpreadPairPicker() async {
+    final reader = context.reader;
+    final chapter = reader.eid;
+    final images = reader.images!;
+    final start = reader.imageLayout.range(reader.page).$1;
+    final glass = LiquidGlass.enabledOf(context);
+    final selected = await showModalBottomSheet<int>(
+      context: context,
+      isScrollControlled: true,
+      useSafeArea: true,
+      backgroundColor: glass ? Colors.transparent : null,
+      elevation: glass ? 0 : null,
+      barrierColor: glass ? Colors.black.withValues(alpha: .22) : null,
+      constraints: const BoxConstraints(maxWidth: 520),
+      builder: (context) => _SpreadPairPicker(
+        initialStart: start,
+        imageCount: images.length,
+        rightToLeft: reader.spreadRightToLeft,
+        imageSizes: reader.spreadImageSizes,
+        imageBuilder: (index, onSize) => ComicImage(
+          width: double.infinity,
+          height: double.infinity,
+          image: ReaderImageProvider(
+            images[index],
+            reader.type.comicSource?.key,
+            reader.cid,
+            chapter,
+            index + 1,
+          ),
+          fit: BoxFit.contain,
+          onImageSize: onSize,
+          cacheHeight: (240 * MediaQuery.devicePixelRatioOf(context)).ceil(),
+        ),
+      ),
+    );
+    if (!mounted ||
+        selected == null ||
+        reader.eid != chapter ||
+        !identical(reader.images, images)) {
+      return;
+    }
+    reader.setSpreadOverride('pair', firstImage: selected + 1);
+    update();
   }
 
   bool shouldShowChapterComments() {

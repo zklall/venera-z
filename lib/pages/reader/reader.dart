@@ -64,6 +64,7 @@ part 'scaffold.dart';
 
 part 'images.dart';
 part 'spread_alignment.dart';
+part 'spread_pair_picker.dart';
 
 part 'gesture.dart';
 
@@ -330,11 +331,18 @@ class _ReaderState extends State<Reader>
     return true;
   }
 
-  /// Overrides are per comic/chapter, independent of reader setting scopes.
-  void setSpreadOverride(String? kind) {
+  /// [firstImage] is a 1-based source image number, so a pair can cross the
+  /// current screen boundary. Overrides are per comic/chapter.
+  void setSpreadOverride(String? kind, {int? firstImage}) {
     if (!twoPageSpread || !canShiftImages) return;
-    final (start, end) = imageLayout.range(page);
     final isPair = kind == 'pair' || kind == 'alignedPair';
+    if (firstImage != null &&
+        (!isPair || firstImage < 1 || firstImage >= images!.length)) {
+      return;
+    }
+    final (start, end) = firstImage == null
+        ? imageLayout.range(page)
+        : (firstImage - 1, firstImage + 1);
     if (isPair && end - start != 2) return;
     if ((kind == 'page' || kind == 'spread') && end - start != 1) return;
     if (kind != null && !isPair && kind != 'page' && kind != 'spread') {
@@ -356,6 +364,12 @@ class _ReaderState extends State<Reader>
       _spreadOverrides.remove(start + 1);
     }
     if (kind != null) _spreadOverrides[start] = kind;
+    if (isPair || kind == null) {
+      // A saved pair must lay out the same way now and after reopening. Do not
+      // let an earlier temporary one-image shift keep extra boundaries alive.
+      imageGroupingOffset = 0;
+      imageGroupingAnchor = null;
+    }
     final saved = appdata.settings['readerSpreadOverrides'];
     final all = saved is Map
         ? Map<String, dynamic>.from(saved)

@@ -5,6 +5,7 @@ import 'package:venera/foundation/appdata.dart';
 import 'package:venera/utils/data_sync.dart';
 import 'package:venera/foundation/res.dart';
 import 'package:venera/pages/reader/reader.dart';
+import 'package:venera/utils/translations.dart';
 import 'reader_page_margin_test.dart' as fixture;
 
 class _NoDataSync extends Fake implements DataSync {
@@ -19,6 +20,19 @@ Future<void> closeReader(WidgetTester tester) async {
   await tester.pumpWidget(const SizedBox());
   await tester.pump(const Duration(seconds: 2));
   await fixture.settle(tester);
+  // The widget fixture uses a fake clock while settings use real filesystem
+  // writes. Drain the serialized save queue before reusing the next fixture.
+  var saved = false;
+  final flush = appdata.saveData(false).then((_) => saved = true);
+  for (var attempt = 0; !saved && attempt < 25; attempt++) {
+    await fixture.settle(tester);
+  }
+  expect(
+    saved,
+    isTrue,
+    reason: 'reader settings finish saving before teardown',
+  );
+  await flush;
 }
 
 void main() {
@@ -28,6 +42,191 @@ void main() {
     DataSync.instance = _NoDataSync();
   });
   tearDown(() => DataSync.instance = previousSync);
+
+  testWidgets(
+    'pages 12 and 13 can be selected across old groups, saved, reopened and reset',
+    (tester) async {
+      dynamic state = await fixture.openReader(
+        tester,
+        'galleryRightToLeft',
+        imageCount: 19,
+        initialPage: 12,
+        imageSizes: {
+          for (var image = 1; image <= 19; image++) image: const Size(90, 128),
+        },
+      );
+      appdata.settings['readerTwoPageSpread'] = true;
+      state.update();
+      await fixture.settle(tester);
+      expect(state.imageLayout.range(state.page), (10, 12));
+      expect(state.imageLayout.range(state.page + 1), (12, 14));
+      await tester.tapAt(const Offset(500, 300));
+      await fixture.settle(tester);
+      await tester.tap(find.byKey(const Key('reader-spread-options')));
+      await tester.pumpAndSettle();
+      await tester.tap(
+        find.ancestor(
+          of: find.text('Choose two pages for a spread'.tl),
+          matching: find.byType(CheckedPopupMenuItem<String>),
+        ),
+      );
+      await fixture.settle(tester);
+      final candidate = find.byKey(const Key('reader-spread-pair-12'));
+      await tester.ensureVisible(candidate);
+      await tester.tap(candidate);
+      await tester.pumpAndSettle();
+      // Preview selection alone must never change or persist the reader layout.
+      expect(state.imageLayout.range(state.page), (10, 12));
+      expect(appdata.settings['readerSpreadOverrides'], isEmpty);
+      await tester.ensureVisible(
+        find.byKey(const Key('reader-spread-pair-confirm')),
+      );
+      await tester.tap(find.byKey(const Key('reader-spread-pair-confirm')));
+      await fixture.settle(tester);
+      expect(state.imageLayout.range(state.page), (11, 13));
+      expect(state.joinedSpreadPairs, {11});
+      expect((appdata.settings['readerSpreadOverrides'] as Map).values.single, {
+        '11': 'pair',
+      });
+      Finder image(int n) => find.byKey(ValueKey('reader-spread-image-$n'));
+      expect(
+        tester.getRect(image(13)).right,
+        closeTo(tester.getRect(image(12)).left, .1),
+      );
+      state.toNextPage();
+      await fixture.settle(tester);
+      expect(state.imageLayout.range(state.page), (13, 15));
+      state.toPrevPage();
+      await fixture.settle(tester);
+      expect(state.imageLayout.range(state.page), (11, 13));
+      appdata.settings['readerTwoPageSpread'] = false;
+      state.update();
+      await fixture.settle(tester);
+      expect(state.page, 12);
+      appdata.settings['readerTwoPageSpread'] = true;
+      state.update();
+      await fixture.settle(tester);
+      expect(state.imageLayout.range(state.page), (11, 13));
+      final root = tester.widget<MaterialApp>(find.byType(MaterialApp));
+      await closeReader(tester);
+      await tester.pumpWidget(root);
+      await fixture.settle(tester);
+      state = tester.state(find.byType(Reader));
+      expect(state.joinedSpreadPairs, {11});
+      expect(state.imageLayout.range(state.page), (11, 13));
+      final indices = <int>[
+        for (var page = 1; page <= state.maxPage; page++)
+          for (
+            var i = state.imageLayout.range(page).$1;
+            i < state.imageLayout.range(page).$2;
+            i++
+          )
+            i,
+      ];
+      expect(indices, List.generate(19, (i) => i));
+      state.setSpreadOverride(null);
+      await fixture.settle(tester);
+      expect(state.imageLayout.range(state.imageLayout.pageForImage(12)), (
+        10,
+        12,
+      ));
+      expect(state.imageLayout.range(state.imageLayout.pageForImage(13)), (
+        12,
+        14,
+      ));
+      expect(appdata.settings['readerSpreadOverrides'], isEmpty);
+      expect(tester.takeException(), isNull);
+      await closeReader(tester);
+    },
+  );
+
+  testWidgets(
+    'pair selection can be cancelled and also works from a single last page',
+    (tester) async {
+      final dynamic state = await fixture.openReader(
+        tester,
+        'galleryRightToLeft',
+        imageCount: 19,
+        initialPage: 13,
+      );
+      appdata.settings['readerTwoPageSpread'] = true;
+      state.update();
+      await fixture.settle(tester);
+      await tester.tapAt(const Offset(500, 300));
+      await fixture.settle(tester);
+      Future<void> openPicker() async {
+        await tester.tap(find.byKey(const Key('reader-spread-options')));
+        await tester.pumpAndSettle();
+        await tester.tap(
+          find.ancestor(
+            of: find.text('Choose two pages for a spread'.tl),
+            matching: find.byType(CheckedPopupMenuItem<String>),
+          ),
+        );
+        await fixture.settle(tester);
+      }
+
+      await openPicker();
+      await tester.tap(find.byKey(const Key('reader-spread-pair-12')));
+      await tester.pumpAndSettle();
+      final left = find.byKey(const Key('reader-spread-preview-13'));
+      final right = find.byKey(const Key('reader-spread-preview-12'));
+      expect(
+        tester.getRect(left).right,
+        closeTo(tester.getRect(right).left, .1),
+      );
+      await tester.tap(find.byTooltip('Close'.tl));
+      await tester.pumpAndSettle();
+      expect(state.imageLayout.range(state.page), (12, 14));
+      expect(appdata.settings['readerSpreadOverrides'], isEmpty);
+      state.toPage(state.maxPage, animate: false);
+      await fixture.settle(tester);
+      expect(state.imageLayout.range(state.page), (18, 19));
+      await openPicker();
+      expect(find.byKey(const Key('reader-spread-pair-18')), findsOneWidget);
+      expect(find.byKey(const Key('reader-spread-pair-19')), findsNothing);
+      await tester.ensureVisible(
+        find.byKey(const Key('reader-spread-pair-confirm')),
+      );
+      await tester.tap(find.byKey(const Key('reader-spread-pair-confirm')));
+      await fixture.settle(tester);
+      expect(state.imageLayout.range(state.page), (17, 19));
+      expect(state.joinedSpreadPairs, {17});
+      expect(tester.takeException(), isNull);
+      await closeReader(tester);
+    },
+  );
+
+  testWidgets(
+    're-pairing replaces overlapping pairs and clears temporary shifts',
+    (tester) async {
+      final dynamic state = await fixture.openReader(
+        tester,
+        'galleryLeftToRight',
+      );
+      appdata.settings['readerTwoPageSpread'] = true;
+      state.update();
+      await fixture.settle(tester);
+      state.setSpreadOverride('alignedPair', firstImage: 11);
+      await fixture.settle(tester);
+      state.setSpreadOverride('pair', firstImage: 13);
+      await fixture.settle(tester);
+      expect(state.joinedSpreadPairs, {10, 12});
+      state.shiftImage(1);
+      state.setSpreadOverride('pair', firstImage: 12);
+      await fixture.settle(tester);
+      expect(state.joinedSpreadPairs, {11});
+      expect(state.alignedSpreadPairs, isEmpty);
+      expect(state.imageGroupingAnchor, isNull);
+      expect(state.imageGroupingOffset, 0);
+      expect(state.imageLayout.range(state.page), (11, 13));
+      state.setSpreadOverride('pair', firstImage: 30);
+      state.setSpreadOverride('pair', firstImage: 0);
+      expect(state.joinedSpreadPairs, {11});
+      expect(tester.takeException(), isNull);
+      await closeReader(tester);
+    },
+  );
 
   testWidgets(
     'Komiic spread keeps image 93 left and image 92 right independent of navigation',

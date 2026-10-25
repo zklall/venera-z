@@ -98,7 +98,7 @@ void main() {
         await tester.tap(find.byKey(const Key('reader-spread-options')));
         await tester.pumpAndSettle();
         final labels = [
-          'Keep these pages as a spread',
+          'Choose two pages for a spread',
           'Align this spread seam',
           'Reset spread layout',
         ];
@@ -112,10 +112,15 @@ void main() {
       await checkAlignment();
       await tester.tap(
         find.ancestor(
-          of: find.text('Keep these pages as a spread'.tl),
+          of: find.text('Choose two pages for a spread'.tl),
           matching: find.byType(CheckedPopupMenuItem<String>),
         ),
       );
+      await fixture.settle(tester);
+      await tester.ensureVisible(
+        find.byKey(const Key('reader-spread-pair-confirm')),
+      );
+      await tester.tap(find.byKey(const Key('reader-spread-pair-confirm')));
       await fixture.settle(tester);
       await checkAlignment();
       expect(find.byIcon(Icons.done), findsOneWidget);

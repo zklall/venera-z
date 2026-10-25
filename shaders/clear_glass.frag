@@ -8,6 +8,8 @@ uniform vec4 u_radii;
 uniform float u_edge_width;
 uniform float u_refraction;
 uniform float u_pixel_ratio;
+uniform vec4 u_tint;
+uniform float u_light_intensity;
 uniform sampler2D u_backdrop;
 
 out vec4 frag_color;
@@ -44,10 +46,15 @@ void main() {
   uv.y = 1.0 - uv.y;
 #endif
   vec4 backdrop = texture(u_backdrop, uv);
+  // Leave the curved rim clear. Tint increases towards the flat centre so a
+  // readable panel does not paint over its own refraction and specular light.
+  float tint = u_tint.a * smoothstep(0.0, edge_width * 1.35, inside);
+  vec3 body = mix(backdrop.rgb, u_tint.rgb * backdrop.a, tint);
   float light = dot(normal, normalize(vec2(-0.55, -0.83)));
-  float highlight = max(light, 0.0) * pow(edge, 5.0) * 0.16;
-  float shade = max(-light, 0.0) * pow(edge, 3.0) * 0.10;
-  frag_color = vec4(backdrop.rgb * (1.0 - shade) +
+  float light_falloff = mix(5.0, 3.0, clamp(u_light_intensity - 1.0, 0.0, 1.0));
+  float highlight = max(light, 0.0) * pow(edge, light_falloff) * 0.16 * u_light_intensity;
+  float shade = max(-light, 0.0) * pow(edge, 3.0) * 0.10 * u_light_intensity;
+  frag_color = vec4(body * (1.0 - shade) +
                      vec3(highlight) * backdrop.a,
                    backdrop.a);
 }

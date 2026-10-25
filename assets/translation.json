@@ -1,5 +1,9 @@
 {
   "zh_CN": {
+    "Choose two pages for a spread": "选择两页组成跨页",
+    "Numbers refer to single-page images. Select the pair that belongs together.": "页码按单页原图计算，选择应当拼在一起的两页。",
+    "Pages @first–@last": "第 @first–@last 页",
+    "Use pages @first–@last as a spread": "将第 @first–@last 页设为跨页",
     "@appName is a free and open-source app for comic reading.": "@appName 是免费开源的漫画阅读应用。",
     "Point the camera at a @appName WebDAV config QR code.": "将摄像头对准 @appName WebDAV 配置二维码",
     "Default direction": "默认方向",
@@ -712,6 +716,10 @@
     "Read a comic or swipe left to mark its latest chapters as read. Following stays enabled.": "阅读漫画或左滑可标记已看完最新章节，仍保留追更。"
   },
   "zh_TW": {
+    "Choose two pages for a spread": "選擇兩頁組成跨頁",
+    "Numbers refer to single-page images. Select the pair that belongs together.": "頁碼按單頁原圖計算，選擇應當拼在一起的兩頁。",
+    "Pages @first–@last": "第 @first–@last 頁",
+    "Use pages @first–@last as a spread": "將第 @first–@last 頁設為跨頁",
     "@appName is a free and open-source app for comic reading.": "@appName 是免費開源的漫畫閱讀應用。",
     "Point the camera at a @appName WebDAV config QR code.": "將攝影機對準 @appName WebDAV 配置二維碼",
     "Default direction": "預設方向",

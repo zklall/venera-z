@@ -28,7 +28,7 @@ class _SharpBackdrop extends CustomPainter {
 
 void main() {
   testWidgets(
-    'clear centre preserves backdrop detail; only bevel refracts after move and resize',
+    'glass bevel refracts after move, resize and rotation, including a tinted panel',
     (tester) async {
       await tester.runAsync(LiquidGlass.loadProgram);
       const key = ValueKey('optics');
@@ -39,8 +39,10 @@ void main() {
         double ratio,
         bool enabled,
         bool nested,
-        int turns,
-      ) async {
+        int turns, {
+        bool tinted = false,
+        double refraction = 5,
+      }) async {
         tester.view.devicePixelRatio = ratio;
         tester.view.physicalSize = Size(400 * ratio, 280 * ratio);
         await tester.pumpWidget(
@@ -63,11 +65,17 @@ void main() {
                           rect: lens,
                           child: RotatedBox(
                             quarterTurns: turns,
-                            child: const LiquidGlass(
-                              borderRadius: BorderRadius.all(
+                            child: LiquidGlass(
+                              borderRadius: const BorderRadius.all(
                                 Radius.circular(28),
                               ),
-                              child: SizedBox.expand(),
+                              bevelWidth: tinted ? 20 : 14,
+                              refraction: refraction,
+                              lightIntensity: tinted ? 1.8 : 1,
+                              tint: tinted
+                                  ? const Color(0xD1FFF8F6)
+                                  : Colors.transparent,
+                              child: const SizedBox.expand(),
                             ),
                           ),
                         ),
@@ -101,18 +109,38 @@ void main() {
       }
 
       for (final sample in [
-        (const Rect.fromLTWH(68, 84, 220, 100), 1.0, false, 0),
-        (const Rect.fromLTWH(96, 40, 180, 160), 2.0, false, 0),
-        (const Rect.fromLTWH(68, 44, 220, 130), 2.0, true, 0),
-        (const Rect.fromLTWH(68, 44, 220, 130), 2.0, true, 1),
-        (const Rect.fromLTWH(68, 44, 220, 130), 2.0, true, 3),
+        (const Rect.fromLTWH(68, 84, 220, 100), 1.0, false, 0, false),
+        (const Rect.fromLTWH(96, 40, 180, 160), 2.0, false, 0, false),
+        (const Rect.fromLTWH(68, 44, 220, 130), 2.0, true, 0, false),
+        (const Rect.fromLTWH(68, 44, 220, 130), 2.0, true, 1, false),
+        (const Rect.fromLTWH(68, 44, 220, 130), 2.0, true, 3, false),
+        (const Rect.fromLTWH(68, 44, 220, 130), 2.0, true, 0, true),
+        (const Rect.fromLTWH(68, 44, 220, 130), 2.0, true, 1, true),
       ]) {
-        final (localLens, ratio, nested, turns) = sample;
+        final (localLens, ratio, nested, turns, tinted) = sample;
         final lens = localLens.shift(
           nested ? const Offset(32, 24) : Offset.zero,
         );
-        final before = await capture(localLens, ratio, false, nested, turns);
-        final after = await capture(localLens, ratio, true, nested, turns);
+        // For the tinted panel both captures have identical tint and lighting.
+        // Only refraction changes, so an alpha overlay cannot pass this check.
+        final before = await capture(
+          localLens,
+          ratio,
+          tinted,
+          nested,
+          turns,
+          tinted: tinted,
+          refraction: 0,
+        );
+        final after = await capture(
+          localLens,
+          ratio,
+          true,
+          nested,
+          turns,
+          tinted: tinted,
+          refraction: tinted ? 9 : 5,
+        );
         final width = (400 * ratio).round();
         double difference(Rect area) {
           var sum = 0, count = 0;
@@ -142,7 +170,7 @@ void main() {
         );
         final outside = difference(const Rect.fromLTWH(8, 8, 20, 20));
         debugPrint(
-          'clear glass DPR $ratio turns $turns: centre=$centre, bevel=$bevel, outside=$outside',
+          'glass DPR $ratio turns $turns tinted=$tinted: centre=$centre, bevel=$bevel, outside=$outside',
         );
         expect(
           centre,
