@@ -14,7 +14,7 @@ import 'package:venera/utils/translations.dart';
 const _bytes = [1, 2, 3, 4];
 const _asset = ReleaseAsset(
   name: 'venera.apk',
-  url: 'https://github.com/zklall/venera-z/releases/download/v3/venera.apk',
+  url: 'https://github.com/zklall/venera-prime/releases/download/v3/venera.apk',
   size: 4,
 );
 const _release = LatestRelease(version: '3.0', title: '3.0', body: '', url: '');

@@ -11,7 +11,7 @@ import 'package:venera/network/app_dio.dart' show AppDio;
 
 ReleaseAsset apk(String name) => ReleaseAsset(
   name: name,
-  url: 'https://github.com/zklall/venera-z/releases/download/v3/$name',
+  url: 'https://github.com/zklall/venera-prime/releases/download/v3/$name',
   size: 4,
 );
 LatestRelease release(List<ReleaseAsset> assets) =>
@@ -70,7 +70,7 @@ void main() {
       expect(parsed.assets.single.name, 'venera.apk');
       expect(
         parsed.url,
-        'https://github.com/zklall/venera-z/releases/latest',
+        'https://github.com/zklall/venera-prime/releases/latest',
       );
     },
   );
@@ -90,7 +90,7 @@ void main() {
     final latest = await fetchLatestAppRelease(dio: dio);
     expect(
       adapter.request!.uri.toString(),
-      'https://api.github.com/repos/zklall/venera-z/releases/latest',
+      'https://api.github.com/repos/zklall/venera-prime/releases/latest',
     );
     expect(latest!.version, '3.0.0');
     expect(latest.androidAsset(['arm64-v8a'])!.name, 'venera-arm64-v8a.apk');

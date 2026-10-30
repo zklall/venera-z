@@ -1,10 +1,11 @@
-# Venera Z
+# venera next version
+
+
+# venera-prime
 [![flutter](https://img.shields.io/badge/flutter-3.41.4-blue)](https://flutter.dev/)
 
 
-Venera Z 是基于 Venera Prime 的漫画阅读器，支持本地漫画和网络漫画源。
-
-[下载最新版](https://github.com/zklall/venera-z/releases/latest)
+A comic reader that support reading local and network comics.
 
 ## Features
 - Read local comics
