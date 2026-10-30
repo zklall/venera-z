@@ -16,7 +16,7 @@ export "context.dart";
 
 class _App {
   final name = "Venera Z";
-  final version = "2.6.8";
+  final version = "2.6.9";
 
   bool get isAndroid => Platform.isAndroid;
 

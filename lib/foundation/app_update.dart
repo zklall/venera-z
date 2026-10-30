@@ -8,7 +8,7 @@ import 'package:venera/foundation/log.dart';
 import 'package:venera/network/app_dio.dart';
 
 class AppReleaseSource {
-  static const repository = 'zklall/venera-prime';
+  static const repository = 'zklall/venera-z';
   static const repositoryUrl = 'https://github.com/$repository';
   static const latestReleaseUrl = '$repositoryUrl/releases/latest';
   static const latestReleaseApiUrl =
