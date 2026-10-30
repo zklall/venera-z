@@ -19,7 +19,7 @@ abstract mixin class _ComicPageActions {
     update();
     var res = await comicSource.likeOrUnlikeComic!(comic.id, isLiked);
     if (res.error) {
-      App.rootContext.showMessage(message: res.errorMessage!);
+      App.rootContext.showError(error: res.errorMessage!);
     } else {
       isLiked = !isLiked;
     }
@@ -183,8 +183,8 @@ abstract mixin class _ComicPageActions {
                                   if (value.success) {
                                     archives = value.data;
                                   } else {
-                                    App.rootContext.showMessage(
-                                      message: value.errorMessage!,
+                                    App.rootContext.showError(
+                                      error: value.errorMessage!,
                                     );
                                   }
                                   setState(() {
@@ -223,7 +223,7 @@ abstract mixin class _ComicPageActions {
                       var res = await comicSource.archiveDownloader!
                           .getDownloadUrl(comic.id, archives![selected].id);
                       if (res.error) {
-                        App.rootContext.showMessage(message: res.errorMessage!);
+                        App.rootContext.showError(error: res.errorMessage!);
                         setState(() {
                           isGettingLink = false;
                         });
@@ -431,8 +431,8 @@ abstract mixin class _ComicPageActions {
                                   );
                                   Navigator.of(dialogContext).pop();
                                 } else {
-                                  App.rootContext.showMessage(
-                                    message: value.errorMessage!,
+                                  App.rootContext.showError(
+                                    error: value.errorMessage!,
                                   );
                                   setState(() {
                                     isLoading = false;

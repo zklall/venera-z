@@ -196,7 +196,9 @@ class NetworkCacheManager implements Interceptor {
     if (response.requestOptions.method != "GET") {
       return handler.next(response);
     }
-    if (response.statusCode != null && response.statusCode! >= 400) {
+    // Only complete successful responses can be replayed as HTTP 200.
+    // Sources use custom 2xx codes (e.g. 210) for application errors.
+    if (response.statusCode != 200) {
       return handler.next(response);
     }
     var size = _calculateSize(response.data);

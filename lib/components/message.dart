@@ -7,6 +7,10 @@ void showToast({
   Widget? trailing,
   int? seconds,
 }) {
+  if (AppErrorInfo.isTechnical(message)) {
+    showAppError(context: context, error: message);
+    return;
+  }
   var newEntry = OverlayEntry(
     builder: (context) =>
         _ToastOverlay(message: message, icon: icon, trailing: trailing),

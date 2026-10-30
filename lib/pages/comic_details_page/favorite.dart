@@ -188,7 +188,7 @@ class _NetworkSectionState extends State<_NetworkSection> {
   void loadFolders() async {
     var res = await widget.comicSource.favoriteData!.loadFolders!(widget.cid);
     if (res.error) {
-      context.showMessage(message: res.errorMessage!);
+      context.showError(error: res.errorMessage!);
       setState(() {
         isLoadingFolders = false;
       });
@@ -340,7 +340,7 @@ class _NetworkSectionState extends State<_NetworkSection> {
                         context.pop();
                       }
                     } else {
-                      context.showMessage(message: res.errorMessage!);
+                      context.showError(error: res.errorMessage!);
                     }
                     setState(() {
                       isLoading = false;
@@ -430,7 +430,7 @@ class _NetworkSectionState extends State<_NetworkSection> {
                           context.pop();
                         }
                       } else {
-                        context.showMessage(message: res.errorMessage!);
+                        context.showError(error: res.errorMessage!);
                       }
                       setState(() {
                         _itemLoading[id] = false;

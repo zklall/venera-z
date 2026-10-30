@@ -1,4 +1,5 @@
 import 'dart:math' as math;
+import 'package:venera/components/components.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/gestures.dart' show DragStartBehavior;
 import 'package:flutter/services.dart';
@@ -115,7 +116,7 @@ Future<void> showBackgroundTask(
                   if (task.message.isNotEmpty)
                     Padding(
                       padding: const EdgeInsets.only(top: 8),
-                      child: SelectableText(task.message.tl),
+                      child: SelectableText(AppErrorInfo.isTechnical(task.message) ? AppErrorInfo.from(task.message).message : task.message.tl),
                     ),
                   if (task.errors.isNotEmpty) ...[
                     const SizedBox(height: 12),
@@ -128,13 +129,13 @@ Future<void> showBackgroundTask(
                         ClipboardData(text: task.errors.join('\n\n')),
                       ),
                       icon: const Icon(Icons.copy),
-                      label: Text('Copy all errors'.tl),
+                      label: Text('Copy diagnostic details'.tl),
                     ),
                     for (var i = 0; i < task.errors.length; i++)
                       Row(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Expanded(child: SelectableText(task.errors[i])),
+                          Expanded(child: ErrorNotice(error: task.errors[i])),
                           IconButton(
                             tooltip: 'Copy'.tl,
                             icon: const Icon(Icons.copy, size: 18),
@@ -256,7 +257,7 @@ Future<void> _showBackgroundTasks(
                                 LinearProgressIndicator(value: task.progress),
                               if (task.message.isNotEmpty)
                                 Text(
-                                  task.message.tl,
+                                  AppErrorInfo.isTechnical(task.message) ? AppErrorInfo.from(task.message).message : task.message.tl,
                                   maxLines: 3,
                                   overflow: TextOverflow.ellipsis,
                                 ),

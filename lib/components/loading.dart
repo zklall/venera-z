@@ -22,66 +22,55 @@ class NetworkError extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    var cfe = CloudflareException.fromString(message);
+    final cfe = CloudflareException.fromString(message);
+    final info = AppErrorInfo.from(message);
     Widget body = Center(
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Center(
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(
-                  Icons.error_outline,
-                  size: 28,
-                  color: context.colorScheme.error,
-                ),
-                const SizedBox(width: 8),
-                Text(
-                  "Error".tl,
-                  style: ts.withColor(context.colorScheme.error).s16,
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            cfe == null ? message : "Cloudflare verification required".tl,
-            textAlign: TextAlign.center,
-            maxLines: 3,
-          ),
-          TextButton(
-            onPressed: () {
-              saveFile(
-                data: utf8.encode(Log().toString()),
-                filename: 'log.txt',
-              );
-            },
-            child: Text("Export logs".tl),
-          ),
-          const SizedBox(height: 8),
-          if (retry != null)
-            if (cfe != null)
-              FilledButton(
-                onPressed: () => passCloudflare(
-                  CloudflareException.fromString(message)!,
-                  retry!,
-                ),
-                child: Text('Verify'.tl),
-              )
-            else
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.all(24),
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 480),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                cfe != null
+                    ? Icons.verified_user_outlined
+                    : Icons.error_outline,
+                size: 36,
+                color: context.colorScheme.error,
+              ),
+              const SizedBox(height: 12),
+              Text(
+                info.title,
+                textAlign: TextAlign.center,
+                style: Theme.of(context).textTheme.titleLarge,
+              ),
+              const SizedBox(height: 12),
+              Text(info.message, textAlign: TextAlign.center),
+              const SizedBox(height: 20),
+              Wrap(
+                spacing: 12,
+                runSpacing: 8,
+                alignment: WrapAlignment.center,
                 children: [
-                  if (action != null)
-                    action!.paddingRight(8),
-                  FilledButton(
-                    onPressed: retry,
-                    child: Text(buttonText ?? 'Retry'.tl),
-                  ),
+                  if (action != null) action!,
+                  if (cfe != null)
+                    FilledButton(
+                      onPressed: () => passCloudflare(cfe, () => retry?.call()),
+                      child: Text('Verify'.tl),
+                    )
+                  else if (retry != null)
+                    FilledButton(
+                      onPressed: retry,
+                      child: Text(buttonText ?? 'Retry'.tl),
+                    ),
                 ],
               ),
-        ],
+              const SizedBox(height: 12),
+              DiagnosticDetails(error: message),
+            ],
+          ),
+        ),
       ),
     );
     if (withAppbar) {
@@ -135,16 +124,23 @@ abstract class LoadingState<T extends StatefulWidget, S extends Object>
   Future<Res<S>> loadDataWithRetry() async {
     int retry = 0;
     while (true) {
-      var res = await loadData();
+      Res<S> res;
+      try {
+        res = await loadData();
+      } catch (error, stack) {
+        Log.error('Load data', error, stack);
+        res = Res.error(error.toString());
+      }
       if (res.success) {
         return res;
       } else {
         if (!mounted) return res;
-        if (retry >= 3) {
+        if (retry >= 3 || !AppErrorInfo.from(res.errorMessage!).canAutoRetry) {
           return res;
         }
         retry++;
-        await Future.delayed(const Duration(milliseconds: 200));
+        await Future.delayed(Duration(seconds: 1 << (retry - 1)));
+        if (!mounted) return res;
       }
     }
   }
@@ -169,9 +165,11 @@ abstract class LoadingState<T extends StatefulWidget, S extends Object>
       error = null;
     });
     loadDataWithRetry().then((value) async {
+      if (!mounted) return;
       if (value.success) {
         data = value.data;
         await onDataLoaded();
+        if (!mounted) return;
         setState(() {
           isLoading = false;
         });
@@ -198,6 +196,7 @@ abstract class LoadingState<T extends StatefulWidget, S extends Object>
         if (value.success) {
           data = value.data;
           await onDataLoaded();
+          if (!mounted) return;
           setState(() {
             isLoading = false;
           });

@@ -69,7 +69,7 @@ class _LocalFavoritesSettingsState extends State<LocalFavoritesSettings> {
               if (context.mounted) context.showMessage(message: message);
             } catch (error) {
               controller.fail(error);
-              if (context.mounted) context.showMessage(message: error.toString());
+              if (context.mounted) context.showError(error: error.toString());
             } finally {
               controller.close();
             }

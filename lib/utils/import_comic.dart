@@ -81,7 +81,7 @@ class ImportComic {
     } catch (error, stack) {
       controller.fail(error);
       Log.error('Import Comic', error, stack);
-      App.rootContext.showMessage(message: error.toString());
+      App.rootContext.showError(error: error.toString());
       return false;
     } finally {
       controller.close();
@@ -254,7 +254,7 @@ class ImportComic {
     } catch (e, s) {
       controller.fail(e);
       Log.error("Import Comic", e.toString(), s);
-      App.rootContext.showMessage(message: e.toString());
+      App.rootContext.showError(error: e.toString());
       return false;
     } finally {
       openedDatabase?.dispose();
@@ -307,7 +307,7 @@ class ImportComic {
     } catch (e, s) {
       controller.fail(e);
       Log.error("Import Comic", e.toString(), s);
-      App.rootContext.showMessage(message: e.toString());
+      App.rootContext.showError(error: e.toString());
       return false;
     }
     return registerComics(imported, copyToLocal, controller: controller);
@@ -353,7 +353,7 @@ class ImportComic {
     } catch (e, s) {
       controller.fail(e);
       Log.error("Import Comic", e.toString(), s);
-      App.rootContext.showMessage(message: e.toString());
+      App.rootContext.showError(error: e.toString());
       return false;
     }
     if (cancelled) {

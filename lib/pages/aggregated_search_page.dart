@@ -159,9 +159,6 @@ class _SliverSearchResultState extends State<_SliverSearchResult>
 
   @override
   Widget build(BuildContext context) {
-    if (error != null && error!.startsWith("CloudflareException")) {
-      error = "Cloudflare verification required".tl;
-    }
     super.build(context);
     return InkWell(
       onTap: () {
@@ -215,8 +212,8 @@ class _SliverSearchResultState extends State<_SliverSearchResult>
                       const SizedBox(width: 8),
                       Expanded(
                         child: Text(
-                          error ?? "No search results found".tl,
-                          maxLines: 1,
+                          error == null ? "No search results found".tl : AppErrorInfo.from(error!).message,
+                          maxLines: 4,
                           overflow: TextOverflow.ellipsis,
                         ),
                       )

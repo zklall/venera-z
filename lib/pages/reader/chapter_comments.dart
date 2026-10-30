@@ -74,7 +74,7 @@ class _ChapterCommentsPageState extends State<ChapterCommentsPage> {
       widget.replyComment?.id,
     );
     if (res.error) {
-      context.showMessage(message: res.errorMessage ?? "Unknown Error");
+      context.showError(error: res.errorMessage ?? "Unknown Error");
     } else {
       var filteredComments = res.data.where((c) => !_shouldBlockComment(c)).toList();
       setState(() {
@@ -265,7 +265,7 @@ class _ChapterCommentsPageState extends State<ChapterCommentsPage> {
                       maxPage = null;
                     });
                   } else {
-                    context.showMessage(message: b.errorMessage ?? "Error");
+                    context.showError(error: b.errorMessage ?? "Error");
                     setState(() {
                       sending = false;
                     });
@@ -453,7 +453,7 @@ class _ChapterCommentTileState extends State<_ChapterCommentTile> {
             isLiked = !isLiked;
             likes += isLiked ? 1 : -1;
           } else {
-            context.showMessage(message: res.errorMessage ?? "Error");
+            context.showError(error: res.errorMessage ?? "Error");
           }
           setState(() {
             isLiking = false;
@@ -518,7 +518,7 @@ class _ChapterCommentTileState extends State<_ChapterCommentTile> {
       widget.comment.voteStatus = voteStatus;
       widget.comment.score = res.data ?? widget.comment.score;
     } else {
-      context.showMessage(message: res.errorMessage ?? "Error");
+      context.showError(error: res.errorMessage ?? "Error");
     }
     setState(() {
       isVotingUp = false;
@@ -657,7 +657,7 @@ class _EmbeddedChapterCommentsPageState
     );
     if (res.error) {
       if (mounted) {
-        context.showMessage(message: res.errorMessage ?? "Unknown Error");
+        context.showError(error: res.errorMessage ?? "Unknown Error");
       }
     } else if (mounted) {
       var filteredComments =
@@ -857,7 +857,7 @@ class _EmbeddedChapterCommentsPageState
                     });
                   } else {
                     if (mounted) {
-                      context.showMessage(message: b.errorMessage ?? "Error");
+                      context.showError(error: b.errorMessage ?? "Error");
                     }
                     setState(() {
                       sending = false;

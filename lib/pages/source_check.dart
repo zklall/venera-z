@@ -123,7 +123,7 @@ class _SourceCheckDialogState extends State<_SourceCheckDialog> {
                             }),
                     ),
                     if (result.comic != null) Text(result.comic!.title),
-                    if (result.error != null) SelectableText(result.error!),
+                    if (result.error != null) ErrorNotice(error: result.error!),
                     if (result.readable)
                       Padding(
                         padding: const EdgeInsets.only(top: 12),
@@ -136,7 +136,7 @@ class _SourceCheckDialogState extends State<_SourceCheckDialog> {
                             result.episode ?? '0',
                             1,
                           ),
-                          errorBuilder: (_, error, _) => Text(error.toString()),
+                          errorBuilder: (_, error, _) => ErrorNotice(error: error),
                         ),
                       ),
                   ],

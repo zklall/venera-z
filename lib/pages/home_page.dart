@@ -532,11 +532,7 @@ class _SyncDataWidgetState extends State<_SyncDataWidget>
                   InkWell(
                     borderRadius: BorderRadius.circular(16),
                     onTap: () {
-                      showDialogMessage(
-                        App.rootContext,
-                        "Error".tl,
-                        DataSync().lastError!,
-                      );
+                      showAppErrorDetails(App.rootContext, DataSync().lastError!);
                     },
                     child: Container(
                       padding: const EdgeInsets.symmetric(

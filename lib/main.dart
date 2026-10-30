@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:venera/utils/translations.dart';
 import 'package:desktop_webview_window/desktop_webview_window.dart';
 import 'package:dynamic_color/dynamic_color.dart';
 import 'package:flex_seed_scheme/flex_seed_scheme.dart';
@@ -297,7 +298,7 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
                 "${details.exception}\n${details.stack}",
               );
               return Material(
-                child: Center(child: Text(details.exception.toString())),
+                child: Center(child: Padding(padding: const EdgeInsets.all(24), child: Text('This screen could not be displayed. Reopen the app; if it happens again, export the log from settings.'.tl, textAlign: TextAlign.center))),
               );
             };
             if (widget != null) {
@@ -409,9 +410,10 @@ class _InitializationFailurePageState extends State<InitializationFailurePage> {
                   style: Theme.of(context).textTheme.titleMedium,
                 ),
                 const SizedBox(height: 12),
-                Text(
-                  '${widget.failure.stage}: ${widget.failure.error}',
-                  textAlign: TextAlign.center,
+                const Text('Check available storage and file access, then retry.', textAlign: TextAlign.center),
+                ExpansionTile(
+                  title: const Text('Diagnostic details'),
+                  children: [SelectableText('${widget.failure.stage}: ${widget.failure.error}')],
                 ),
                 const SizedBox(height: 24),
                 FilledButton.icon(

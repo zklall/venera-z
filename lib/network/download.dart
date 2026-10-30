@@ -1,3 +1,4 @@
+import 'package:venera/foundation/app_error.dart';
 import 'dart:async';
 import 'dart:convert';
 
@@ -1034,7 +1035,7 @@ Future<Res<T>> _runWithRetry<T>(
     try {
       return Res(await task());
     } catch (e) {
-      if (i == retry - 1) {
+      if (i == retry - 1 || !AppErrorInfo.from(e).canAutoRetry) {
         return Res.error(e.toString());
       }
       await Future.delayed(Duration(seconds: (i + 1).clamp(1, 30)));
@@ -1137,7 +1138,7 @@ class _ImageDownloadWrapper {
       }
       Log.error("Download", e.toString(), s);
       retry--;
-      if (retry > 0) {
+      if (retry > 0 && AppErrorInfo.from(e).canAutoRetry) {
         unawaited(
           Future.delayed(Duration(seconds: _retryDelaySeconds())).then((_) {
             if (!isCancelled) {

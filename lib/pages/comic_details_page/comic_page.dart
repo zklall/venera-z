@@ -795,7 +795,7 @@ class _ComicPageState extends LoadingState<ComicPage, ComicDetails>
       await saveFile(filename: "cover${fileType.ext}", data: data);
     } catch (e) {
       if (context.mounted) {
-        context.showMessage(message: "Error".tl);
+        context.showError(error: e);
       }
     }
   }

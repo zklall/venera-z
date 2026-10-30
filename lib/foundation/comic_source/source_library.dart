@@ -10,6 +10,16 @@ T? _firstOrNull<T>(Iterable<T> values) {
   return iterator.moveNext() ? iterator.current : null;
 }
 
+/// Catalog metadata sometimes changes key casing. Resolve a unique installed
+/// match without renaming script identities or merging distinct installed keys.
+String resolveCatalogSourceKey(String key, Iterable<String> installedKeys) {
+  if (installedKeys.contains(key)) return key;
+  final matches = installedKeys.where(
+    (k) => k.toLowerCase() == key.toLowerCase(),
+  );
+  return matches.length == 1 ? matches.single : key;
+}
+
 /// A remote catalog of comic-source scripts.
 class ComicSourceLibrary {
   ComicSourceLibrary({

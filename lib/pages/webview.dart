@@ -166,7 +166,7 @@ class _AppWebviewState extends State<AppWebview> {
       future: future,
       builder: (context, e) {
         if (e.error != null) {
-          return Center(child: Text("Error: ${e.error}"));
+          return Center(child: ErrorNotice(error: e.error ?? "Webview is not available"));
         }
         if (!e.hasData) {
           return const SizedBox();

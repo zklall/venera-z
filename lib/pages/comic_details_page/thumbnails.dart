@@ -150,7 +150,7 @@ class _ComicThumbnailsState extends State<_ComicThumbnails> {
           SliverToBoxAdapter(
             child: Column(
               children: [
-                Text(error!),
+                ErrorNotice(error: error!),
                 Button.outlined(
                   onPressed: loadNext,
                   child: Text("Retry".tl),

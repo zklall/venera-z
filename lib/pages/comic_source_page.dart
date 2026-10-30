@@ -312,7 +312,13 @@ class ComicSourcePage extends StatelessWidget {
         }
         final catalog = <String, List<_CatalogSource>>{};
         for (final entry in raw.whereType<Map>()) {
-          final key = entry['key']?.toString();
+          final rawKey = entry['key']?.toString();
+          final key = rawKey == null
+              ? null
+              : resolveCatalogSourceKey(
+                  rawKey,
+                  ComicSource.all().map((source) => source.key),
+                );
           final version = entry['version']?.toString();
           if (key == null || version == null) continue;
           final downloadUrl = resolveSourceDownloadUrl(
@@ -811,7 +817,7 @@ class _BodyState extends State<_Body> {
       var content = utf8.decode(bytes);
       await addSource(content, fileName);
     } catch (e, s) {
-      App.rootContext.showMessage(message: e.toString());
+      App.rootContext.showError(error: e.toString());
       Log.error("Add comic source", "$e\n$s");
     }
   }
@@ -850,7 +856,7 @@ class _BodyState extends State<_Body> {
     } catch (e, s) {
       if (cancel) return;
       controller.fail(e);
-      App.rootContext.showMessage(message: e.toString());
+      App.rootContext.showError(error: e.toString());
       Log.error("Add comic source", "$e\n$s");
     } finally {
       controller.close();
@@ -915,7 +921,7 @@ Future<void> _installSourceFromLibrary(String url, String libraryId) async {
   } catch (e, s) {
     controller.fail(e);
     Log.error("Install comic source", "$e\n$s");
-    App.rootContext.showMessage(message: e.toString());
+    App.rootContext.showError(error: e.toString());
   } finally {
     controller.close();
   }
@@ -1229,7 +1235,7 @@ class _LibraryCatalogPageState extends State<_LibraryCatalogPage> {
           entries = [];
           loading = false;
         });
-        context.showMessage(message: e.toString());
+        context.showError(error: e.toString());
       }
     }
   }
@@ -1260,7 +1266,10 @@ class _LibraryCatalogPageState extends State<_LibraryCatalogPage> {
         itemCount: entries!.length,
         itemBuilder: (context, index) {
           final entry = entries![index];
-          final key = entry['key']?.toString() ?? '';
+          final key = resolveCatalogSourceKey(
+            entry['key']?.toString() ?? '',
+            installed,
+          );
           final source = ComicSource.find(key);
           final provenance = source == null
               ? null
@@ -1908,7 +1917,7 @@ class _SliverComicSourceState extends State<_SliverComicSource> {
             final List account = source.data["account"];
             var res = await source.account!.login!(account[0], account[1]);
             if (res.error) {
-              context.showMessage(message: res.errorMessage!);
+              context.showError(error: res.errorMessage!);
             } else {
               context.showMessage(message: "Success".tl);
             }
@@ -2074,7 +2083,7 @@ class _LoginPageState extends State<_LoginPage> {
       });
       widget.config.login!(username, password).then((value) {
         if (value.error) {
-          context.showMessage(message: value.errorMessage!);
+          context.showError(error: value.errorMessage!);
           setState(() {
             loading = false;
           });

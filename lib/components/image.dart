@@ -310,7 +310,11 @@ class _AnimatedImageState extends State<AnimatedImage>
         );
       }
     } else if (_lastException != null) {
-      result = const Center(child: Icon(Icons.error));
+      result = Center(child: IconButton(
+        tooltip: AppErrorInfo.from(_lastException!).title,
+        icon: const Icon(Icons.error_outline),
+        onPressed: () => showAppError(context: context, error: _lastException!),
+      ));
 
       if (!widget.excludeFromSemantics) {
         result = Semantics(

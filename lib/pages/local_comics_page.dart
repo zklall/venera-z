@@ -504,7 +504,7 @@ class _LocalComicsPageState extends State<LocalComicsPage> {
     } catch (error, stack) {
       controller.fail(error);
       Log.error('Export Comics', error, stack);
-      if (mounted) context.showMessage(message: error.toString());
+      if (mounted) context.showError(error: error.toString());
     } finally {
       await staging?.deleteIgnoreError(recursive: true);
       controller.close();

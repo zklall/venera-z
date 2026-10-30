@@ -7,6 +7,12 @@ import 'package:venera/foundation/comic_source/comic_source.dart';
 import 'package:venera/foundation/comic_source/source_library.dart';
 
 void main() {
+  test('catalog casing resolves only a unique installed identity', () {
+    expect(resolveCatalogSourceKey('komiic', ['Komiic']), 'Komiic');
+    expect(resolveCatalogSourceKey('Komiic', ['Komiic', 'komiic']), 'Komiic');
+    expect(resolveCatalogSourceKey('KOMIIC', ['Komiic', 'komiic']), 'KOMIIC');
+    expect(resolveCatalogSourceKey('other', ['Komiic']), 'other');
+  });
   TestWidgetsFlutterBinding.ensureInitialized();
 
   test(

@@ -1342,7 +1342,7 @@ class ComicListState extends State<ComicList> {
                   children: [
                     const Icon(Icons.error_outline),
                     const SizedBox(width: 8),
-                    Expanded(child: Text(_error!, maxLines: 3)),
+                    Expanded(child: ErrorNotice(error: _error!)),
                   ],
                 ),
                 const SizedBox(height: 8),

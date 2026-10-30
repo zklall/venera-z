@@ -45,7 +45,7 @@ Future<bool> _deleteComic(
                   setState(() {
                     loading = false;
                   });
-                  context.showMessage(message: res.errorMessage!);
+                  context.showError(error: res.errorMessage!);
                 }
               },
               child: Text("Confirm".tl),
@@ -467,7 +467,7 @@ class _FolderTile extends StatelessWidget {
                     setState(() {
                       loading = false;
                     });
-                    context.showMessage(message: res.errorMessage!);
+                    context.showError(error: res.errorMessage!);
                   }
                 },
                 child: Text("Confirm".tl),
@@ -525,7 +525,7 @@ class _CreateFolderDialogState extends State<_CreateFolderDialog> {
             });
             widget.data.addFolder!(controller.text).then((b) {
               if (b.error) {
-                context.showMessage(message: b.errorMessage!);
+                context.showError(error: b.errorMessage!);
                 setState(() {
                   loading = false;
                 });

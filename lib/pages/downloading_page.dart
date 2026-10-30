@@ -214,6 +214,9 @@ class _DownloadTaskTileState extends State<_DownloadTaskTile> {
                       ),
                     MenuButton(
                       entries: [
+                        if (task.isError)
+                          MenuEntry(icon: Icons.info_outline, text: 'Details'.tl,
+                            onClick: () => showAppErrorDetails(context, task.message)),
                         MenuEntry(
                           icon: Icons.close,
                           text: "Cancel".tl,
@@ -234,7 +237,7 @@ class _DownloadTaskTileState extends State<_DownloadTaskTile> {
                 ),
                 const Spacer(),
                 if (!widget.task.isPaused || widget.task.isError)
-                  Text(widget.task.message, style: ts.s12, maxLines: 3),
+                  Text(widget.task.isError ? AppErrorInfo.from(widget.task.message).message : widget.task.message, style: ts.s12, maxLines: 3),
                 const SizedBox(height: 4),
                 LinearProgressIndicator(value: widget.task.progress),
                 const SizedBox(height: 8),

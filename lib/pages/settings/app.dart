@@ -67,7 +67,7 @@ class _AppSettingsState extends State<AppSettings> {
             } catch (error) {
               loadingDialog.fail(error);
               if (context.mounted) {
-                context.showMessage(message: error.toString());
+                context.showError(error: error.toString());
               }
             } finally {
               loadingDialog.close();
@@ -98,7 +98,7 @@ class _AppSettingsState extends State<AppSettings> {
             } catch (error) {
               loading.fail(error);
               if (context.mounted) {
-                context.showMessage(message: error.toString());
+                context.showError(error: error.toString());
               }
             } finally {
               loading.close();
@@ -180,7 +180,7 @@ class _AppSettingsState extends State<AppSettings> {
             } catch (error) {
               controller.fail(error);
               if (context.mounted) {
-                context.showMessage(message: error.toString());
+                context.showError(error: error.toString());
               }
             } finally {
               await file?.deleteIgnoreError();
@@ -568,7 +568,7 @@ class _WebdavQrScannerPageState extends State<_WebdavQrScannerPage> {
             controller: controller,
             onDetect: handleDetect,
             onDetectError: (error, stackTrace) {
-              context.showMessage(message: error.toString());
+              context.showError(error: error.toString());
             },
           ),
           Align(
@@ -1078,7 +1078,7 @@ class _WebdavSettingState extends State<_WebdavSetting> {
                         appdata.implicitData['webdavAutoSync'] = oldAutoSync;
                         appdata.writeImplicitData();
                         appdata.saveData(false);
-                        context.showMessage(message: testResult.errorMessage!);
+                        context.showError(error: testResult.errorMessage!);
                         context.showMessage(message: "Saved Failed".tl);
                       } else {
                         appdata.saveData(false);

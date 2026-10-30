@@ -1,3 +1,4 @@
+import 'package:venera/utils/translations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -83,6 +84,11 @@ void main() {
         ),
       );
       showBackgroundTask(context, controller.task!);
+      await tester.pumpAndSettle();
+      expect(find.byType(SelectableText), findsNothing);
+      final details = find.text('Diagnostic details'.tl);
+      await tester.ensureVisible(details);
+      await tester.tap(details);
       await tester.pumpAndSettle();
       expect(find.byType(SelectableText), findsWidgets);
       await tester.tap(find.byKey(const Key('background-task-copy-errors')));

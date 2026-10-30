@@ -56,7 +56,13 @@ class _SourceBindingPageState extends State<SourceBindingPage> {
       if (raw is! List) throw const FormatException('Invalid catalog');
       final matches = <({String name, String version, String fileName})>[];
       for (final entry in raw.whereType<Map>()) {
-        if (entry['key'] != source.key) continue;
+        if (resolveCatalogSourceKey(
+              entry['key']?.toString() ?? '',
+              ComicSource.all().map((s) => s.key),
+            ) !=
+            source.key) {
+          continue;
+        }
         final url = resolveSourceDownloadUrl(
           url: entry['url']?.toString(),
           fileName: entry['fileName']?.toString(),

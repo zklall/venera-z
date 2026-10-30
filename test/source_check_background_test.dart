@@ -67,6 +67,25 @@ void main() {
   });
 
   test(
+    'catalog case mismatch still finds updates without renaming installed source',
+    () async {
+      final count = await ComicSourcePage.checkComicSourceUpdate(
+        loadCatalog: (library) async {
+          if (library.id != 'origin') return [];
+          return [
+            {'key': 'BOUND', 'version': '2.0.0', 'fileName': 'bound.js'},
+          ];
+        },
+      );
+      expect(count, 1);
+      expect(ComicSourceManager().availableUpdates.keys, ['bound']);
+      expect(ComicSource.find('bound'), isNotNull);
+      expect(ComicSource.find('BOUND'), isNull);
+      expect(ComicSourceManager().provenanceFor('bound')!.originId, 'origin');
+    },
+  );
+
+  test(
     'partial catalog failure is failed and never changes bound origin',
     () async {
       final count = await ComicSourcePage.checkComicSourceUpdate(

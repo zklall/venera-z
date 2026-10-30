@@ -133,7 +133,7 @@ class _CoverViewerState extends State<_CoverViewer> {
       await saveFile(filename: "cover_${widget.title}${fileType.ext}", data: data);
     } catch (e) {
       if (mounted) {
-        context.showMessage(message: "Error".tl);
+        context.showError(error: e);
       }
     }
   }
