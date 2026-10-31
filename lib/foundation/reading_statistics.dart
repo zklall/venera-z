@@ -61,6 +61,7 @@ class ReadingStatisticsManager with ChangeNotifier {
   Future<void>? _initializing;
 
   bool get isRecordingEnabled =>
+      !appdata.isIncognito &&
       appdata.settings['recordReadingStatistics'] != false;
 
   void setRecordingEnabled(bool enabled) {
@@ -134,9 +135,7 @@ class ReadingStatisticsManager with ChangeNotifier {
     required DateTime startedAt,
     required DateTime endedAt,
   }) {
-    if (!isInitialized ||
-        !isRecordingEnabled ||
-        !endedAt.isAfter(startedAt)) {
+    if (!isInitialized || !isRecordingEnabled || !endedAt.isAfter(startedAt)) {
       return;
     }
     final type = _typeForComic(comic);

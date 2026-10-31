@@ -15,7 +15,6 @@ class _AppearanceSettingsState extends State<AppearanceSettings> {
         SliverAppbar(title: Text("Appearance".tl)),
         _SwitchSetting(
           title: 'Liquid glass'.tl,
-          subtitle: 'Clear glass, edge refraction and floating navigation.'.tl,
           settingKey: 'liquidGlass',
           onChanged: App.forceRebuild,
         ).toSliver(),

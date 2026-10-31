@@ -65,12 +65,6 @@ class ReaderRotationPanel extends StatelessWidget {
               ),
             ],
           ),
-          Text(
-            'Turn the reader to suit how you hold the screen.'.tl,
-            style: Theme.of(
-              context,
-            ).textTheme.bodyMedium?.copyWith(color: colors.onSurfaceVariant),
-          ),
           const SizedBox(height: 20),
           LayoutBuilder(
             builder: (context, constraints) => Wrap(
@@ -139,13 +133,13 @@ class ReaderRotationPanel extends StatelessWidget {
             key: const Key('reader-rotation-pin'),
             contentPadding: EdgeInsets.zero,
             title: Text('Use as default for future reading'.tl),
-            subtitle: Text(
-              pinned != null && pinned != rotation
-                  ? 'Current default: @direction'.tlParams({
+            subtitle: pinned != null && pinned != rotation
+                ? Text(
+                    'Current default: @direction'.tlParams({
                       'direction': pinned!.label.tl,
-                    })
-                  : 'Applies whenever you open a comic.'.tl,
-            ),
+                    }),
+                  )
+                : null,
             value: pinned == rotation,
             onChanged: onPinChanged,
           ),

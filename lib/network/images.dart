@@ -9,6 +9,7 @@ import 'package:venera/utils/image.dart';
 import 'package:venera/utils/file_type.dart';
 
 import 'app_dio.dart';
+import '../foundation/source_recovery.dart';
 
 abstract class ImageDownloader {
   static Stream<ImageDownloadProgress> loadThumbnail(
@@ -168,6 +169,46 @@ abstract class ImageDownloader {
     bool cacheResult = true,
     bool useCache = true,
   }) async* {
+    final generation = sourceKey == null
+        ? null
+        : SourceRecovery.instance.generation(sourceKey);
+    try {
+      yield* _loadComicImageAttempt(
+        imageKey,
+        sourceKey,
+        cid,
+        eid,
+        cacheResult: cacheResult,
+        useCache: useCache,
+      );
+    } catch (e) {
+      if (!await ComicSource.recoverDevice(
+        sourceKey,
+        e,
+        startedWith: generation,
+      )) {
+        rethrow;
+      }
+      // Re-run onImageLoad: its URL and headers may depend on the device info.
+      yield* _loadComicImageAttempt(
+        imageKey,
+        sourceKey,
+        cid,
+        eid,
+        cacheResult: cacheResult,
+        useCache: false,
+      );
+    }
+  }
+
+  static Stream<ImageDownloadProgress> _loadComicImageAttempt(
+    String imageKey,
+    String? sourceKey,
+    String cid,
+    String eid, {
+    bool cacheResult = true,
+    bool useCache = true,
+  }) async* {
     final cacheKey = "$imageKey@$sourceKey@$cid@$eid";
     final data = useCache ? await CacheManager().readCache(cacheKey) : null;
 
@@ -279,7 +320,9 @@ abstract class ImageDownloader {
         );
         return;
       } catch (e) {
-        if (retryLimit < 0 || onLoadFailed == null) {
+        if (SourceRecovery.isDeviceRestriction(e) ||
+            retryLimit < 0 ||
+            onLoadFailed == null) {
           rethrow;
         }
         var newConfig = await onLoadFailed();

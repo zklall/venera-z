@@ -11,7 +11,7 @@
     "Rotate right 90°": "向右 90°",
     "Reading direction": "阅读方向",
     "Turn the reader to suit how you hold the screen.": "转动画面，适应内屏的握持方向。",
-    "Use as default for future reading": "固定为后续默认",
+    "Use as default for future reading": "设为默认方向",
     "Applies whenever you open a comic.": "之后打开任何漫画时使用此方向。",
     "Current default: @direction": "当前默认：@direction",
     "Not pinned": "未固定",
@@ -199,7 +199,7 @@
     "Remember separately for each comic": "按漫画分别记忆",
     "Except for keeping rotation after exit, all modes restore the screen orientation from before entering the reader when leaving.": "除“退出后保持旋转”外，其他模式都会在离开阅读器时恢复进入前的屏幕方向。",
     "Page animation": "页面动画",
-    "Flash white screen on page turn": "翻页时闪烁白屏",
+    "Flash white screen on page turn": "翻页闪白清屏",
     "Useful for reducing ghosting on e-ink screens.": "有助于减少墨水屏上的残影。",
     "Sync white flash setting with WebDAV": "通过 WebDAV 同步白屏闪烁设置",
     "Turn off to keep this e-ink preference local to this device.": "关闭后，此墨水屏偏好将仅保留在本设备上。",
@@ -758,7 +758,15 @@
     "Try again. If the problem continues, open Diagnostic details or export the log to help identify the cause.": "请重试。如果持续出现，请打开“诊断详情”或导出日志，以便进一步排查。",
     "Diagnostic details": "诊断详情",
     "Copy diagnostic details": "复制诊断详情",
-    "This screen could not be displayed. Reopen the app; if it happens again, export the log from settings.": "当前页面无法显示。请重新打开应用；如果再次出现，请到设置中导出日志。"
+    "This screen could not be displayed. Reopen the app; if it happens again, export the log from settings.": "当前页面无法显示。请重新打开应用；如果再次出现，请到设置中导出日志。",
+    "Operation completed": "操作已完成",
+    "Device information cleared": "设备信息已清除",
+    "Incognito mode": "无痕模式",
+    "Do not save searches, reading progress or reading statistics. Existing records are kept.": "不保存搜索历史、阅读进度和阅读统计。已有记录保留。",
+    "Contains saved accounts. Keep private.": "包含已保存的账号，请勿分享。",
+    "Restores saved accounts. Use a trusted backup.": "会恢复账号，仅导入可信备份。",
+    "Syncs accounts too. Use trusted HTTPS storage.": "含账号数据，请使用可信 HTTPS 服务。",
+    "Limit width in vertical scroll": "竖向滚动限宽"
   },
   "zh_TW": {
     "Choose two pages for a spread": "選擇兩頁組成跨頁",
@@ -772,7 +780,7 @@
     "Rotate right 90°": "向右 90°",
     "Reading direction": "閱讀方向",
     "Turn the reader to suit how you hold the screen.": "轉動畫面，適應內螢幕的握持方向。",
-    "Use as default for future reading": "固定為後續預設",
+    "Use as default for future reading": "設為預設方向",
     "Applies whenever you open a comic.": "之後開啟任何漫畫時使用此方向。",
     "Current default: @direction": "目前預設：@direction",
     "Not pinned": "未固定",
@@ -959,7 +967,7 @@
     "Remember separately for each comic": "按漫畫分別記憶",
     "Except for keeping rotation after exit, all modes restore the screen orientation from before entering the reader when leaving.": "除「離開後保持旋轉」外，其他模式都會在離開閱讀器時恢復進入前的螢幕方向。",
     "Page animation": "頁面動畫",
-    "Flash white screen on page turn": "翻頁時閃爍白屏",
+    "Flash white screen on page turn": "翻頁閃白清屏",
     "Useful for reducing ghosting on e-ink screens.": "有助於減少電子墨水屏上的殘影。",
     "Sync white flash setting with WebDAV": "透過 WebDAV 同步白屏閃爍設定",
     "Turn off to keep this e-ink preference local to this device.": "關閉後，此電子墨水屏偏好將僅保留在本設備上。",
@@ -1518,6 +1526,14 @@
     "Try again. If the problem continues, open Diagnostic details or export the log to help identify the cause.": "請重試。如果持續出現，請開啟「診斷詳情」或匯出日誌，以便進一步排查。",
     "Diagnostic details": "診斷詳情",
     "Copy diagnostic details": "複製診斷詳情",
-    "This screen could not be displayed. Reopen the app; if it happens again, export the log from settings.": "目前頁面無法顯示。請重新開啟應用程式；如果再次出現，請到設定中匯出日誌。"
+    "This screen could not be displayed. Reopen the app; if it happens again, export the log from settings.": "目前頁面無法顯示。請重新開啟應用程式；如果再次出現，請到設定中匯出日誌。",
+    "Operation completed": "操作已完成",
+    "Device information cleared": "裝置資訊已清除",
+    "Incognito mode": "無痕模式",
+    "Do not save searches, reading progress or reading statistics. Existing records are kept.": "不儲存搜尋紀錄、閱讀進度和閱讀統計。保留既有紀錄。",
+    "Contains saved accounts. Keep private.": "包含已儲存的帳號，請勿分享。",
+    "Restores saved accounts. Use a trusted backup.": "會還原帳號，僅匯入可信備份。",
+    "Syncs accounts too. Use trusted HTTPS storage.": "含帳號資料，請使用可信 HTTPS 服務。",
+    "Limit width in vertical scroll": "直向捲動限寬"
   }
 }

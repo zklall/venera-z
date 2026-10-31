@@ -333,7 +333,10 @@ class _ComicImageState extends State<ComicImage> with WidgetsBindingObserver {
               children: [
                 Expanded(
                   child: Center(
-                    child: Text(_lastException.toString(), maxLines: 3),
+                    child: SingleChildScrollView(
+                      padding: const EdgeInsets.all(16),
+                      child: ErrorNotice(error: _lastException!),
+                    ),
                   ),
                 ),
                 const SizedBox(height: 4),

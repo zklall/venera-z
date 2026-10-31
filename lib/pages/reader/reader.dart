@@ -408,6 +408,20 @@ class _ReaderState extends State<Reader>
   bool _whiteRefreshOverlayReady = false;
   DateTime? _readingSessionStarted;
   bool _markedComplete = false;
+  bool _wasIncognito = false;
+
+  void _onPrivacyChanged() {
+    final enabled = appdata.isIncognito;
+    if (enabled == _wasIncognito) return;
+    _wasIncognito = enabled;
+    _updateHistoryTimer?.cancel();
+    _updateHistoryTimer = null;
+    // Never include time spent in incognito in a later normal session.
+    _readingSessionStarted =
+        !enabled && ReadingStatisticsManager().isRecordingEnabled
+        ? DateTime.now()
+        : null;
+  }
 
   var focusNode = FocusNode();
 
@@ -415,6 +429,8 @@ class _ReaderState extends State<Reader>
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
+    _wasIncognito = appdata.isIncognito;
+    appdata.settings.addListener(_onPrivacyChanged);
     _readingSessionStarted = ReadingStatisticsManager().isRecordingEnabled
         ? DateTime.now()
         : null;
@@ -505,6 +521,7 @@ class _ReaderState extends State<Reader>
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
+    appdata.settings.removeListener(_onPrivacyChanged);
     rotation.dispose();
     _commitReadingSession();
     if (isFullscreen) {
@@ -548,7 +565,8 @@ class _ReaderState extends State<Reader>
   }
 
   void _markReadLaterComplete() {
-    if (_markedComplete ||
+    if (appdata.isIncognito ||
+        _markedComplete ||
         appdata.settings.getReaderSetting(
               cid,
               type.sourceKey,
@@ -662,6 +680,11 @@ class _ReaderState extends State<Reader>
   Timer? _updateHistoryTimer;
 
   void updateHistory() {
+    if (appdata.isIncognito) {
+      _updateHistoryTimer?.cancel();
+      _updateHistoryTimer = null;
+      return;
+    }
     if (history != null) {
       // page >= maxPage handles both last image page and chapter comments page
       if (page >= maxPage) {

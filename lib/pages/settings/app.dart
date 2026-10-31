@@ -13,11 +13,11 @@ class _AppSettingsState extends State<AppSettings> {
     return SmoothCustomScrollView(
       slivers: [
         SliverAppbar(title: Text("App".tl)),
+        const IncognitoSetting().toSliver(),
         _SettingPartTitle(title: "Background tasks".tl, icon: Icons.task_alt),
         _SwitchSetting(
           title: "Floating task button".tl,
           settingKey: 'showBackgroundTaskButton',
-          subtitle: "Hiding the button does not stop background tasks.".tl,
         ).toSliver(),
         ListTile(
           title: Text("Background tasks".tl),
@@ -164,7 +164,7 @@ class _AppSettingsState extends State<AppSettings> {
         _CallbackSetting(
           title: "Export App Data".tl,
           subtitle:
-              "Backups contain passwords, tokens and cookies. Store them securely and do not share them."
+              "Contains saved accounts. Keep private."
                   .tl,
           callback: () async {
             final controller = showLoadingDialog(
@@ -192,7 +192,7 @@ class _AppSettingsState extends State<AppSettings> {
         _CallbackSetting(
           title: "Import App Data".tl,
           subtitle:
-              "Import only trusted backups. Saved accounts and login sessions will be restored."
+              "Restores saved accounts. Use a trusted backup."
                   .tl,
           callback: () async {
             final file = await selectFile(ext: ['venera', 'picadata']);
@@ -252,7 +252,7 @@ class _AppSettingsState extends State<AppSettings> {
         _CallbackSetting(
           title: "Data Sync".tl,
           subtitle:
-              "WebDAV sync includes source accounts and cookies. Use a trusted HTTPS server."
+              "Syncs accounts too. Use trusted HTTPS storage."
                   .tl,
           callback: () async {
             showWebdavSettings(context);
@@ -266,7 +266,6 @@ class _AppSettingsState extends State<AppSettings> {
         ).toSliver(),
         _CallbackSetting(
           title: "WebDAV config QR code".tl,
-          subtitle: "Quickly migrate WebDAV settings to another device.".tl,
           callback: showWebdavConfigQrCode,
           actionTitle: 'Show'.tl,
         ).toSliver(),

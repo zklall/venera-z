@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:venera/components/incognito_setting.dart';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -249,6 +250,7 @@ class _SearchPageState extends State<SearchPage> {
       },
       focusNode: focusNode,
     );
+    yield const SliverToBoxAdapter(child: IncognitoSetting());
     if (suggestions.isNotEmpty) {
       yield buildSuggestions(context);
     } else {

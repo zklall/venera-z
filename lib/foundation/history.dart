@@ -17,6 +17,7 @@ import 'package:venera/utils/ext.dart';
 import 'package:venera/utils/translations.dart';
 
 import 'app.dart';
+import 'appdata.dart';
 import 'consts.dart';
 
 part "image_favorites.dart";
@@ -334,6 +335,7 @@ class HistoryManager with ChangeNotifier {
   ///
   /// This function would be called when user start reading.
   void addHistory(History newItem) {
+    if (appdata.isIncognito) return;
     _db.execute(_insertHistorySql, [
       newItem.id,
       newItem.title,

@@ -15,23 +15,33 @@ class AppErrorInfo {
   String get message => messageKey.tl;
 
   static bool isTechnical(String text) =>
+      statusCode(text) != null ||
       RegExp(
         r'HTTP\s+\d{3}|Exception|Bad state:|RangeError|NoSuchMethodError|Null check operator|Error:|TypeError|FormatError|StackTrace|Invalid status code|status code of|Cloudflare|key\(.+\) already exists|#\d+\s+|\bat .+\([^\n]+:\d+|\{.+\}|errno\s*=|XMLHttpRequest',
         caseSensitive: false,
       ).hasMatch(text) ||
       text.length > 300;
 
+  static int? statusCode(Object error) {
+    final raw = error.toString();
+    if (RegExp(r'^\s*(?:HTTP\s*)?[45]\d{2}\s*$').hasMatch(raw)) {
+      return int.parse(raw.replaceAll(RegExp(r'[^0-9]'), ''));
+    }
+    int? status = error is DioException ? error.response?.statusCode : null;
+    return status ??
+        int.tryParse(
+          RegExp(
+                r'(?:invalid\s+status\s+code\s*:?\s*|status\s+code\s+(?:of\s+)?|statuscode\s*[:=]\s*|http\s+)(\d{3})\b',
+                caseSensitive: false,
+              ).firstMatch(raw)?.group(1) ??
+              '',
+        );
+  }
+
   factory AppErrorInfo.from(Object error) {
     final raw = error.toString();
     final text = raw.toLowerCase();
-    int? status = error is DioException ? error.response?.statusCode : null;
-    status ??= int.tryParse(
-      RegExp(
-            r'(?:invalid\s+status\s+code\s*:?\s*|status\s+code\s+of\s+|statuscode\s*[:=]\s*|http\s+)(\d{3})\b',
-            caseSensitive: false,
-          ).firstMatch(raw)?.group(1) ??
-          '',
-    );
+    final status = statusCode(error);
     if (text.contains('cloudflare') &&
         (text.contains('exception') || text.contains('verification'))) {
       return const AppErrorInfo(

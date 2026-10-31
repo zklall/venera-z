@@ -790,9 +790,6 @@ class _BodyState extends State<_Body> {
               listenable: appdata.settings,
               builder: (context, _) => SwitchListTile(
                 title: Text("Automatically update comic sources".tl),
-                subtitle: Text(
-                  "Only update sources from their bound libraries".tl,
-                ),
                 value: appdata.settings['autoUpdateComicSources'] == true,
                 onChanged: (value) {
                   appdata.settings['autoUpdateComicSources'] = value;
@@ -1558,19 +1555,25 @@ class _CallbackSettingState extends State<_CallbackSetting> {
   bool isLoading = false;
 
   Future<void> onClick() async {
-    var func = widget.setting.value['callback'];
-    var result = func([]);
-    if (result is Future) {
-      setState(() {
-        isLoading = true;
-      });
-      try {
-        await result;
-      } finally {
-        setState(() {
-          isLoading = false;
-        });
+    if (isLoading) return;
+    setState(() => isLoading = true);
+    try {
+      await Future.sync(() => widget.setting.value['callback']([]));
+      final source = ComicSource.find(widget.sourceKey);
+      await source?.saveData();
+      if (mounted) {
+        context.showMessage(
+          message:
+              (key == 'clear_device_info'
+                      ? 'Device information cleared'
+                      : 'Operation completed')
+                  .tl,
+        );
       }
+    } catch (e) {
+      if (mounted) context.showError(error: e);
+    } finally {
+      if (mounted) setState(() => isLoading = false);
     }
   }
 
@@ -1905,7 +1908,6 @@ class _SliverComicSourceState extends State<_SliverComicSource> {
         bool loading = _reLogin[source.key] == true;
         yield ListTile(
           title: Text("Re-login".tl),
-          subtitle: Text("Click if login expired".tl),
           onTap: () async {
             if (source.data["account"] == null) {
               context.showMessage(message: "No data".tl);

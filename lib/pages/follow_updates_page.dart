@@ -334,17 +334,10 @@ class _FollowUpdatesPageState extends AutomaticGlobalState<FollowUpdatesPage> {
                 );
               },
             ),
-            Text(
-              "Automatic update checking enabled.".tl,
-              style: ts.s14,
-            ).paddingHorizontal(16),
             Text(scheduleDescription, style: ts.s14).paddingHorizontal(16),
             const SizedBox(height: 8),
             SwitchListTile(
               title: Text("Check follow updates on startup".tl),
-              subtitle: Text(
-                "Run one check immediately after the app starts.".tl,
-              ),
               value: checkOnStart,
               onChanged: (value) {
                 saveFollowUpdateSetting("followUpdatesCheckOnStart", value);
@@ -352,9 +345,6 @@ class _FollowUpdatesPageState extends AutomaticGlobalState<FollowUpdatesPage> {
             ),
             ListTile(
               title: Text("Follow updates check interval".tl),
-              subtitle: Text(
-                "Automatic checks skip comics checked within this interval.".tl,
-              ),
               trailing: Select(
                 current: formatCheckInterval(checkIntervalHours),
                 values: _checkIntervalOptions.map(formatCheckInterval).toList(),
@@ -369,11 +359,6 @@ class _FollowUpdatesPageState extends AutomaticGlobalState<FollowUpdatesPage> {
             ),
             ListTile(
               title: Text("Fixed check time".tl),
-              subtitle: Text(
-                fixedCheckTime.isEmpty
-                    ? "Automatic checks can run at any time.".tl
-                    : "Automatic checks wait until this time of day.".tl,
-              ),
               trailing: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
@@ -466,13 +451,6 @@ class _FollowUpdatesPageState extends AutomaticGlobalState<FollowUpdatesPage> {
             ),
           ),
         ),
-        if (updatedComics.isNotEmpty)
-          SliverToBoxAdapter(
-            child: Text(
-              "Read a comic or swipe left to mark its latest chapters as read. Following stays enabled."
-                  .tl,
-            ).paddingHorizontal(16).paddingVertical(4),
-          ),
         if (updatedComics.isNotEmpty)
           SliverGridComics(
             comics: updatedComics,

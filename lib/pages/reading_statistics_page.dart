@@ -136,11 +136,6 @@ class _ReadingStatisticsPageState extends State<ReadingStatisticsPage> {
                       : Icons.shield_moon_outlined,
                 ),
                 title: Text('Record reading statistics'.tl),
-                subtitle: manager.isRecordingEnabled
-                    ? null
-                    : Text(
-                        'Paused; new reading activity will not be recorded.'.tl,
-                      ),
                 value: manager.isRecordingEnabled,
                 onChanged: manager.setRecordingEnabled,
               ),

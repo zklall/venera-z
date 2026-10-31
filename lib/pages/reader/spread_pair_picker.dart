@@ -80,13 +80,6 @@ class _SpreadPairPickerState extends State<_SpreadPairPicker> {
                     ),
                   ],
                 ),
-                Text(
-                  'Numbers refer to single-page images. Select the pair that belongs together.'
-                      .tl,
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: colors.onSurfaceVariant,
-                  ),
-                ),
                 const SizedBox(height: 16),
                 Wrap(
                   spacing: 8,

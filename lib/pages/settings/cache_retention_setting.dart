@@ -16,10 +16,6 @@ class CacheRetentionSetting extends StatelessWidget {
             : 7;
         return ListTile(
           title: Text('Keep unused cache'.tl),
-          subtitle: Text(
-            'Remove cached images after this many days without use. Opening an image restarts the timer. Downloaded and local comics are kept. Never disables age-based cleanup; the cache size limit still applies.'
-                .tl,
-          ),
           trailing: DropdownButton<int>(
             value: days,
             items: [

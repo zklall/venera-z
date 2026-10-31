@@ -5,7 +5,6 @@ class _SwitchSetting extends StatefulWidget {
     required this.title,
     required this.settingKey,
     this.onChanged,
-    this.subtitle,
     this.comicId,
     this.comicSource,
     this.useDeviceSettings = false,
@@ -16,8 +15,6 @@ class _SwitchSetting extends StatefulWidget {
   final String settingKey;
 
   final VoidCallback? onChanged;
-
-  final String? subtitle;
 
   final String? comicId;
 
@@ -46,7 +43,6 @@ class _SwitchSettingState extends State<_SwitchSetting> {
 
     return ListTile(
       title: Text(widget.title),
-      subtitle: widget.subtitle == null ? null : Text(widget.subtitle!),
       trailing: Switch(
         value: value,
         onChanged: (value) {

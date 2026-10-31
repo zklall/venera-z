@@ -186,7 +186,6 @@ class _ReaderSettingsState extends State<ReaderSettings> {
                 for (final direction in ReaderRotation.values)
                   direction.name: direction.label.tl,
               },
-              help: 'You can also pin a direction from the reader toolbar.'.tl,
               onChanged: () {
                 widget.onChanged?.call(ReaderRotationPreference.settingKey);
               },
@@ -221,9 +220,6 @@ class _ReaderSettingsState extends State<ReaderSettings> {
         ).toSliver(),
         _SwitchSetting(
           title: 'Page margin'.tl,
-          subtitle:
-              'Continuous mode keeps pages connected; margins stay beside the reading area.'
-                  .tl,
           settingKey: 'readerPageMarginEnabled',
           onChanged: () {
             setState(() {});
@@ -301,7 +297,6 @@ class _ReaderSettingsState extends State<ReaderSettings> {
         ).toSliver(),
         _SwitchSetting(
           title: "Flash white screen on page turn".tl,
-          subtitle: "Useful for reducing ghosting on e-ink screens.".tl,
           settingKey: _whiteRefreshSettingKey,
           onChanged: () {
             widget.onChanged?.call(_whiteRefreshSettingKey);
@@ -313,9 +308,6 @@ class _ReaderSettingsState extends State<ReaderSettings> {
         if (comicId == null)
           SwitchListTile(
             title: Text("Sync white flash setting with WebDAV".tl),
-            subtitle: Text(
-              "Turn off to keep this e-ink preference local to this device.".tl,
-            ),
             value: !appdata.isSyncFieldDisabled(_whiteRefreshSettingKey),
             onChanged: (value) {
               setState(() {
@@ -354,8 +346,6 @@ class _ReaderSettingsState extends State<ReaderSettings> {
           visible: horizontalGallery,
           child: _SwitchSetting(
             title: "Two-page spread".tl,
-            subtitle:
-                "Show two pages side by side in portrait and landscape".tl,
             settingKey: 'readerTwoPageSpread',
             onChanged: () {
               setState(() {});
@@ -370,8 +360,6 @@ class _ReaderSettingsState extends State<ReaderSettings> {
           visible: twoPageSpread,
           child: _SwitchSetting(
             title: 'Right-to-left order within spreads'.tl,
-            subtitle:
-                'Put the earlier page on the right, as in Japanese manga.'.tl,
             settingKey: 'readerSpreadRightToLeft',
             onChanged: () => widget.onChanged?.call('readerSpreadRightToLeft'),
             comicId: isEnabledSpecificSettings ? widget.comicId : null,
@@ -438,9 +426,6 @@ class _ReaderSettingsState extends State<ReaderSettings> {
                   readerSetting('readerScreenPicNumberForPortrait') > 1),
           child: _SwitchSetting(
             title: "Show single image on first page".tl,
-            subtitle: twoPageSpread
-                ? 'Pair pages 2–3, 4–5, and so on.'.tl
-                : null,
             settingKey: singleCoverSettingKey,
             onChanged: () {
               widget.onChanged?.call(singleCoverSettingKey);
@@ -503,8 +488,7 @@ class _ReaderSettingsState extends State<ReaderSettings> {
           ),
         ),
         _SwitchSetting(
-          title: 'Limit image width'.tl,
-          subtitle: 'When using Continuous(Top to Bottom) mode'.tl,
+          title: 'Limit width in vertical scroll'.tl,
           settingKey: 'limitImageWidth',
           onChanged: () {
             widget.onChanged?.call('limitImageWidth');

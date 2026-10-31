@@ -1294,6 +1294,7 @@ class LocalFavoritesManager with ChangeNotifier {
   }
 
   void onRead(String id, ComicType type) async {
+    if (appdata.isIncognito) return;
     if (appdata.settings['moveFavoriteAfterRead'] == "none") {
       markAsRead(id, type);
       return;

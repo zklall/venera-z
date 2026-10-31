@@ -7,4 +7,4 @@
 - 应用显示名为 Venera Z，保留现有包名、签名及更新仓库 zklall/venera-prime。
 - Android 仅编译 arm64-v8a，发布到此 fork 的 Release。
 - Release 说明简短，只写本次改动。
-- 视觉改动先发实际界面预览，用户确认后再编译发布。
+- 按用户最新要求，UI 改动直接落实，不逐项发送预览；编译发布仍以用户指示为准。

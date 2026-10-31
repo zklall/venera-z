@@ -20,6 +20,7 @@ import 'package:venera/utils/init.dart';
 import 'package:venera/utils/io.dart';
 import 'package:venera/utils/translations.dart';
 
+import '../source_recovery.dart';
 import '../js_engine.dart';
 import '../log.dart';
 import 'source_library.dart';
@@ -489,6 +490,36 @@ class ComicSource {
       }
     }
     return newMap;
+  }
+
+  /// Uses only the source's explicit reset action; never deletes account data.
+  Future<bool> clearDeviceInfo() async {
+    final setting = (getSettingsDynamic() ?? settings)?['clear_device_info'];
+    if (setting == null ||
+        setting['type'] != 'callback' ||
+        setting['callback'] == null) {
+      return false;
+    }
+    await Future.sync(() => setting['callback']([]));
+    await saveData();
+    return true;
+  }
+
+  static Future<bool> recoverDevice(
+    String? key,
+    Object error, {
+    DateTime? startedWith,
+  }) async {
+    final source = key == null ? null : find(key);
+    if (source == null) return false;
+    return SourceRecovery.instance.recover(source.key, error, () async {
+      try {
+        return await source.clearDeviceInfo();
+      } catch (e, s) {
+        Log.error('SourceRecovery', '$e\n$s');
+        return false;
+      }
+    }, startedWith: startedWith);
   }
 
   Map<String, Map<String, dynamic>>? getSettingsDynamic() {

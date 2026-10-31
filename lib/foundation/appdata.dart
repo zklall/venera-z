@@ -110,7 +110,10 @@ class Appdata with Init {
     }
   }
 
+  bool get isIncognito => settings['incognitoMode'] == true;
+
   void addSearchHistory(String keyword) {
+    if (isIncognito) return;
     if (searchHistory.contains(keyword)) {
       searchHistory.remove(keyword);
     }
@@ -246,6 +249,7 @@ class Appdata with Init {
     "proxy",
     "authorizationRequired",
     "recordReadingStatistics",
+    "incognitoMode",
     "customImageProcessing",
     "webdav",
     "disableSyncFields",
@@ -474,6 +478,7 @@ class Settings with ChangeNotifier {
     'quickCollectImage': 'No', // No, DoubleTap, Swipe
     'authorizationRequired': false,
     'recordReadingStatistics': true,
+    'incognitoMode': false,
     'onClickFavorite': 'viewDetail', // viewDetail, read
     'enableDnsOverrides': false,
     'dnsOverrides': {},
@@ -651,4 +656,3 @@ async function processImage(image, cid, eid, page, sourceKey) {
 
 const _defaultSourceListUrl =
     "https://cdn.jsdelivr.net/gh/venera-app/venera-configs@main/index.json";
-

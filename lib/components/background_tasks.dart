@@ -214,7 +214,6 @@ Future<void> _showBackgroundTasks(
           children: [
             ListTile(
               title: Text('Background tasks'.tl),
-              subtitle: Text('Tasks continue when you leave their pages.'.tl),
               trailing: IconButton(
                 tooltip: 'Clear finished tasks'.tl,
                 icon: const Icon(Icons.clear_all),
