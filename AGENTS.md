@@ -4,7 +4,7 @@
 
 本 fork 的既定用户要求优先于发布规范中的通用默认项：
 
-- 应用显示名为 Venera Z，保留现有包名、签名及更新仓库 zklall/venera-prime。
+- 应用显示名为 Venera Z，保留现有包名、签名及更新仓库 zklall/venera-z。
 - Android 仅编译 arm64-v8a，发布到此 fork 的 Release。
 - Release 说明简短，只写本次改动。
 - 按用户最新要求，UI 改动直接落实，不逐项发送预览；编译发布仍以用户指示为准。
