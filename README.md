@@ -4,7 +4,7 @@
 
 Venera Z 是基于 Venera Prime 的漫画阅读器，支持本地漫画和网络漫画源。
 
-[下载最新版](https://github.com/zklall/venera-prime/releases/latest)
+[下载最新版](https://github.com/zklall/venera-z/releases/latest)
 
 ## Features
 - Read local comics
