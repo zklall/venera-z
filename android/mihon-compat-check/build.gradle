@@ -1,0 +1,47 @@
+plugins {
+    id 'com.android.application'
+    id 'org.jetbrains.kotlin.android'
+}
+
+// Test host only: the shipping app does not depend on this module.
+android {
+    namespace 'com.github.veneraz.mihon.compatcheck'
+    compileSdk 36
+    defaultConfig {
+        applicationId 'com.github.veneraz.mihon.compatcheck'
+        minSdk 24
+        targetSdk 36
+        versionCode 1
+        versionName '1'
+        testInstrumentationRunner 'androidx.test.runner.AndroidJUnitRunner'
+        testProguardFiles 'test-rules.pro'
+    }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+    kotlinOptions { jvmTarget = '17' }
+    testBuildType 'release'
+    buildTypes {
+        release {
+            minifyEnabled true
+            shrinkResources true
+            signingConfig signingConfigs.debug
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'test-host.pro'
+        }
+    }
+    sourceSets {
+        androidTest.java.srcDir '../mihon-runtime/src/androidTest/kotlin'
+        androidTest.assets.srcDir project(':mihon-runtime').layout.buildDirectory.dir('generated/fixture-assets')
+    }
+}
+
+dependencies {
+    implementation project(':mihon-runtime')
+    androidTestImplementation 'androidx.test:runner:1.6.2'
+    androidTestImplementation 'androidx.test.ext:junit:1.2.1'
+}
+
+tasks.configureEach { task ->
+    if (task.name == 'mergeReleaseAndroidTestAssets') task.dependsOn(':mihon-runtime:copyFixtureApk')
+}

@@ -13,6 +13,10 @@ on:
         description: Publish the APK through the automated release workflow
         type: boolean
         default: false
+      source_run_id:
+        description: Reuse a successful ARM64 build run instead of rebuilding
+        type: string
+        default: ''
       release_tag:
         description: Existing version tag to publish
         type: string
@@ -24,6 +28,7 @@ permissions:
 
 jobs:
   android:
+    if: ${{ !inputs.source_run_id }}
     runs-on: ubuntu-22.04
     timeout-minutes: 45
     env:
@@ -138,6 +143,11 @@ jobs:
           print('Verified single APK and requested native architecture:', abis)
           PY
           python3 tool/check_android_type_signatures.py "$output_dir"/*.apk
+          api_jar=build/mihon-runtime/intermediates/runtime_library_classes_jar/release/bundleLibRuntimeToJarRelease/classes.jar
+          if [ ! -f "$api_jar" ]; then
+            (cd android && ./gradlew :mihon-runtime:bundleLibRuntimeToJarRelease)
+          fi
+          python3 tool/check_mihon_api.py "$api_jar" "$output_dir"/*.apk
           {
             echo "Source commit: $GITHUB_SHA"
             echo 'Application: Venera Z'
@@ -177,3 +187,26 @@ jobs:
             -f build_windows=false -f build_linux=false -f build_linux_arm64=false \
             -f publish_release=true -f allow_personal_trigger=false \
             -f release_tag="$FORK_RELEASE_TAG" -f fork_android_run_id="$GITHUB_RUN_ID"
+
+  publish_existing:
+    if: ${{ inputs.publish_release && inputs.source_run_id }}
+    runs-on: ubuntu-22.04
+    timeout-minutes: 5
+    steps:
+      - name: Publish an existing verified ARM64 build
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          FORK_SOURCE_RUN_ID: ${{ inputs.source_run_id }}
+          FORK_RELEASE_TAG: ${{ inputs.release_tag }}
+        run: |
+          set -euo pipefail
+          test -n "$FORK_RELEASE_TAG"
+          run="$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$FORK_SOURCE_RUN_ID")"
+          test "$(jq -r .head_sha <<< "$run")" = "$GITHUB_SHA"
+          test "$(jq -r .path <<< "$run")" = '.github/workflows/android-fork.yml'
+          test "$(jq -r .conclusion <<< "$run")" = success
+          gh workflow run main.yml --repo "$GITHUB_REPOSITORY" --ref "$FORK_RELEASE_TAG" \
+            -f build_macos=false -f build_ios=false -f build_android=false \
+            -f build_windows=false -f build_linux=false -f build_linux_arm64=false \
+            -f publish_release=true -f allow_personal_trigger=false \
+            -f release_tag="$FORK_RELEASE_TAG" -f fork_android_run_id="$FORK_SOURCE_RUN_ID"

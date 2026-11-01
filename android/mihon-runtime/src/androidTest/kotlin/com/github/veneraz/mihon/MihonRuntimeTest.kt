@@ -31,6 +31,16 @@ class MihonRuntimeTest {
             bitmap.recycle()
             output.toByteArray()
         }
+        // Exercise the same Zstd/Okio bridge that real extensions call.
+        val compressed = okio.Buffer().let { output ->
+            val input = okio.Buffer().write(png)
+            val sink = Class.forName("com.squareup.zstd.okio.OkioZstd")
+                .getMethod("zstdCompress", okio.Sink::class.java)
+                .invoke(null, output) as okio.Sink
+            sink.write(input, png.size.toLong())
+            sink.close()
+            output.readByteArray()
+        }
         val worker = thread(isDaemon = true) {
             while (!socket.isClosed) {
                 val client = try { socket.accept() } catch (_: Exception) { break }
@@ -45,11 +55,13 @@ class MihonRuntimeTest {
                     val path = first.split(' ')[1]
                     val bytes = when {
                         path.startsWith("/resolve/") -> "$base/image".toByteArray()
-                        path == "/image" || path == "/cover" -> png
+                        path == "/image" -> compressed
+                        path == "/cover" -> png
                         else -> "fixture".toByteArray()
                     }
                     val output = it.getOutputStream()
-                    output.write("HTTP/1.1 200 OK\r\nContent-Length: ${bytes.size}\r\nSet-Cookie: fixture=ok; Path=/\r\nConnection: close\r\n\r\n".toByteArray())
+                    val encoding = if (path == "/image") "Content-Encoding: zstd\r\n" else ""
+                    output.write("HTTP/1.1 200 OK\r\nContent-Length: ${bytes.size}\r\n${encoding}Set-Cookie: fixture=ok; Path=/\r\nConnection: close\r\n\r\n".toByteArray())
                     output.write(bytes); output.flush()
                 }
             }
@@ -74,6 +86,9 @@ class MihonRuntimeTest {
             assertNotNull(android.graphics.BitmapFactory.decodeByteArray(image, 0, image.size))
             assertArrayEquals(png, runtime.image("900001", null, null, "$base/cover"))
             assertTrue(requests.any { it.startsWith("POST /image ") && it.contains("X-Image-Method: custom-post") && it.contains("X-Fixture: source-header") })
+            assertTrue(requests.any { it.startsWith("GET /search?") && it.contains("X-Reflected: extension-header") })
+            assertTrue(requests.any { request -> request.startsWith("GET /search?") && request.lines().any { it.startsWith("Accept-Encoding:", true) && it.contains("zstd") } })
+            assertTrue(requests.any { it.startsWith("POST /image ") && it.contains("X-Reflected: extension-header") })
             assertTrue(requests.any { it.startsWith("POST /image ") && it.contains("Cookie: fixture=ok") })
             val tampered = File(context.cacheDir, "tampered.apk")
             java.util.zip.ZipFile(apk).use { source ->

@@ -1,6 +1,7 @@
 package com.github.veneraz.mihon
 
 import com.android.apksig.ApkVerifier
+import android.app.Application
 import android.content.Context
 import android.content.Intent
 import eu.kanade.tachiyomi.source.ConfigurableSource
@@ -21,6 +22,7 @@ import eu.kanade.tachiyomi.source.online.HttpSource
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.protobuf.ProtoBuf
 import okhttp3.Request
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.*
@@ -29,6 +31,7 @@ import java.security.MessageDigest
 import java.util.concurrent.ConcurrentHashMap
 
 /** An in-process Android host. Extension APKs stay in app-private storage. */
+@OptIn(kotlinx.serialization.ExperimentalSerializationApi::class)
 class MihonRuntime(private val context: Context) {
     companion object { @Volatile var active: MihonRuntime? = null; private set }
     private val directory = File(context.filesDir, "mihon_extensions").apply { mkdirs() }
@@ -47,8 +50,10 @@ class MihonRuntime(private val context: Context) {
     init {
         eu.kanade.tachiyomi.AppInfo.context = context.applicationContext
         Injekt.addSingleton<Context>(context.applicationContext)
+        Injekt.addSingleton<Application>(context.applicationContext as Application)
         Injekt.addSingleton(network)
         Injekt.addSingleton(Json { ignoreUnknownKeys = true; explicitNulls = false })
+        Injekt.addSingleton<ProtoBuf>(ProtoBuf)
         Injekt.addSingleton(JavaScriptEngine(context))
         active = this
     }

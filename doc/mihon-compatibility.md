@@ -17,10 +17,15 @@ Android 端从原有漫画源页面接入，不另设漫画源分区：
 
 - `android/mihon-runtime`：宿主 API、扩展加载和原生偏好设置。上游快照及许可证见该目录 `NOTICE`、`LICENSE`。
 - `android/mihon-fixture`：只供测试的扩展，不进入正式发布附件。
+- `android/mihon-compat-check`：使用正式版 R8 压缩配置的测试宿主，用于运行同一组扩展加载与请求测试。
 - `MihonRuntimeTest`：本地 HTTP 测试源验证 APK 工厂加载、搜索、章节顺序、图片请求、重启与卸载。可通过 `-PrealMihonApk=/path/to/extension.apk` 增加真实扩展加载检查；它不等于验证该网站的在线服务。
 
 运行 Android 仪器测试时，添加 `-Pandroid.testInstrumentationRunnerArguments.class=com.github.veneraz.mihon.MihonRuntimeTest` 直接指定测试类，避免扫描所有宿主依赖。
 
-发布前使用 `tool/check_android_type_signatures.py` 检查实际 APK，确认 Injekt 类型令牌的泛型签名经过 R8 压缩后仍保留；此检查已接入 Android 发布工作流。
+发布前使用 `tool/check_android_type_signatures.py` 检查实际 APK，确认 Injekt 类型令牌泛型签名、反射字段、Zstd 接口和宿主类命名空间经过 R8 压缩后仍兼容扩展；此检查已接入 Android 发布工作流。
+
+发布工作流还通过 `tool/check_mihon_api.py` 对照未压缩的宿主 API，检查正式 APK 是否保留其类、字段和方法。R8 版本与 Kotlin 版本须保持兼容。
 
 测试扩展不声明兼容所有网站。具体验证结果以当次测试日志为准。
+
+Keiyoushi 仓库中有少量扩展可调用 Mihon 专用图片解码接口，目前尚未适配，选择这些解码方式时可能无法使用。

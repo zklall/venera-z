@@ -54,6 +54,11 @@ class CatalogAdapter implements HttpClientAdapter {
 Dio client(CatalogAdapter adapter) => Dio()..httpClientAdapter = adapter;
 void main() {
   test('native HTTP and DNS errors use readable classifications', () {
+    final fieldError = AppErrorInfo.from(
+      r'PlatformException(mihon_error, java.lang.NoSuchFieldException: No field headers$delegate in class HttpSource)',
+    );
+    expect(fieldError.titleKey, 'Source compatibility error');
+    expect(fieldError.canAutoRetry, isFalse);
     expect(
       AppErrorInfo.statusCode(
         'eu.kanade.tachiyomi.network.HttpException: HTTP error 402',

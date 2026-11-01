@@ -45,5 +45,15 @@
 -keep class kotlinx.coroutines.** { public protected *; }
 -keep class kotlin.** { public protected *; }
 -keep class androidx.preference.** { public protected *; }
--keep class eu.kanade.tachiyomi.source.** { public protected *; }
+# Extensions can directly link to and reflect on the host's copied API,
+# including private lazy delegates and top-level helper functions.
+-keep class eu.kanade.tachiyomi.** { *; }
+-keep class mihon.core.common.** { *; }
+-keep class tachiyomi.core.common.** { *; }
+# Some extensions call the Zstd/Okio bridge directly, outside the host's code.
+-keep class com.squareup.zstd.** { *; }
 -keep class eu.kanade.tachiyomi.network.AndroidCookieJar { public protected *; }
+
+# R8 must not place host internals in the default package: extension APKs
+# often contain obfuscated classes such as `m`, loaded parent-first.
+-repackageclasses 'com.github.veneraz.mihon.host.internal'

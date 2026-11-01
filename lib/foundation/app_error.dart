@@ -60,13 +60,20 @@ class AppErrorInfo {
         'Use an update from the extension’s original repository.',
       );
     }
+    if (text.contains('nosuchfieldexception') ||
+        text.contains('nosuchfielderror')) {
+      return const AppErrorInfo(
+        'Source compatibility error',
+        'Update Venera Z and try again.',
+      );
+    }
     if (text.contains('unsupported mihon extension api') ||
         text.contains('noclassdeffounderror') ||
         text.contains('nosuchmethoderror') ||
         text.contains('classnotfoundexception')) {
       return const AppErrorInfo(
         'Extension is incompatible',
-        'Update this source extension and try again.',
+        'Update Venera Z or the source extension, then try again.',
       );
     }
     if (text.contains('invalid extension apk') ||

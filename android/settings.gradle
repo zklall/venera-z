@@ -1,4 +1,13 @@
 pluginManagement {
+    // AGP 8.12 bundles an R8 version that cannot parse Kotlin 2.4 metadata.
+    buildscript {
+        repositories {
+            google()
+            mavenCentral()
+            maven { url 'https://storage.googleapis.com/r8-releases/raw' }
+        }
+        dependencies { classpath 'com.android.tools:r8:9.1.29' }
+    }
     def flutterSdkPath = {
         def properties = new Properties()
         file("local.properties").withInputStream { properties.load(it) }
@@ -29,3 +38,5 @@ include ":app"
 include ":mihon-runtime"
 
 include ":mihon-fixture"
+
+include ":mihon-compat-check"

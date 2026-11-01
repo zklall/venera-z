@@ -795,7 +795,10 @@
     "Download the source again from its repository.": "请从仓库重新下载此漫画源。",
     "Proxy configuration is unsupported": "代理配置不支持",
     "Use an HTTP proxy server or switch to a direct connection in network settings.": "请将代理服务器协议改为 HTTP，或在网络设置中改用直连。",
-    "Update Android or choose an older version of this source extension.": "请更新 Android，或选择兼容当前系统的旧版漫画源扩展。"
+    "Update Android or choose an older version of this source extension.": "请更新 Android，或选择兼容当前系统的旧版漫画源扩展。",
+    "Source compatibility error": "漫画源兼容异常",
+    "Update Venera Z and try again.": "请更新 Venera Z 后重试。",
+    "Update Venera Z or the source extension, then try again.": "请更新 Venera Z 或漫画源扩展后重试。"
   },
   "zh_TW": {
     "Choose two pages for a spread": "選擇兩頁組成跨頁",
@@ -1592,6 +1595,9 @@
     "Download the source again from its repository.": "請從來源庫重新下載此漫畫來源。",
     "Proxy configuration is unsupported": "代理設定不支援",
     "Use an HTTP proxy server or switch to a direct connection in network settings.": "請將代理伺服器協定改為 HTTP，或在網路設定中改用直連。",
-    "Update Android or choose an older version of this source extension.": "請更新 Android，或選擇相容目前系統的舊版漫畫來源擴充套件。"
+    "Update Android or choose an older version of this source extension.": "請更新 Android，或選擇相容目前系統的舊版漫畫來源擴充套件。",
+    "Source compatibility error": "漫畫來源相容性異常",
+    "Update Venera Z and try again.": "請更新 Venera Z 後再試。",
+    "Update Venera Z or the source extension, then try again.": "請更新 Venera Z 或漫畫來源擴充套件後再試。"
   }
 }
