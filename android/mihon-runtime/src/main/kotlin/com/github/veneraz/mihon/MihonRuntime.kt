@@ -45,12 +45,12 @@ class MihonRuntime(private val context: Context) {
     val failures = ConcurrentHashMap<String, String>()
 
     init {
-        active = this
         eu.kanade.tachiyomi.AppInfo.context = context.applicationContext
         Injekt.addSingleton<Context>(context.applicationContext)
         Injekt.addSingleton(network)
         Injekt.addSingleton(Json { ignoreUnknownKeys = true; explicitNulls = false })
         Injekt.addSingleton(JavaScriptEngine(context))
+        active = this
     }
 
     @Suppress("DEPRECATION")

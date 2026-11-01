@@ -37,6 +37,10 @@
 -keep class org.jsoup.** { public protected *; }
 -keep class rx.** { public protected *; }
 -keep class uy.kohesive.injekt.** { *; }
+# Inlined Injekt tokens are generated in the host's package, outside the rules
+# above. FullTypeReference reads their generic superclass during construction.
+-keepattributes Signature,InnerClasses,EnclosingMethod
+-keep class * extends uy.kohesive.injekt.api.FullTypeReference { *; }
 -keep class kotlinx.serialization.** { public protected *; }
 -keep class kotlinx.coroutines.** { public protected *; }
 -keep class kotlin.** { public protected *; }

@@ -137,6 +137,7 @@ jobs:
           assert abis == {os.environ['FORK_ANDROID_ABI']}, abis
           print('Verified single APK and requested native architecture:', abis)
           PY
+          python3 tool/check_android_type_signatures.py "$output_dir"/*.apk
           {
             echo "Source commit: $GITHUB_SHA"
             echo 'Application: Venera Z'

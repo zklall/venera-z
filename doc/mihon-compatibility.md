@@ -21,4 +21,6 @@ Android 端从原有漫画源页面接入，不另设漫画源分区：
 
 运行 Android 仪器测试时，添加 `-Pandroid.testInstrumentationRunnerArguments.class=com.github.veneraz.mihon.MihonRuntimeTest` 直接指定测试类，避免扫描所有宿主依赖。
 
+发布前使用 `tool/check_android_type_signatures.py` 检查实际 APK，确认 Injekt 类型令牌的泛型签名经过 R8 压缩后仍保留；此检查已接入 Android 发布工作流。
+
 测试扩展不声明兼容所有网站。具体验证结果以当次测试日志为准。

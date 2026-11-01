@@ -10,7 +10,9 @@ import kotlinx.coroutines.*
 
 class MihonChannel(private val context: Context, messenger: BinaryMessenger) {
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
-    private val runtime = MihonRuntime.active ?: MihonRuntime(context.applicationContext)
+    private val runtime by lazy {
+        MihonRuntime.active ?: MihonRuntime(context.applicationContext)
+    }
     private val channel = MethodChannel(messenger, "venera/mihon")
     init {
         channel.setMethodCallHandler { call, result ->
