@@ -9,26 +9,13 @@ on:
         type: choice
         default: arm64-v8a
         options: [arm64-v8a, armeabi-v7a, x86_64]
-      publish_release:
-        description: Publish the APK through the automated release workflow
-        type: boolean
-        default: false
-      source_run_id:
-        description: Reuse a successful ARM64 build run instead of rebuilding
-        type: string
-        default: ''
-      release_tag:
-        description: Existing version tag to publish
-        type: string
-        default: ''
 
 permissions:
-  contents: write
-  actions: write
+  contents: read
+  actions: read
 
 jobs:
   android:
-    if: ${{ !inputs.source_run_id }}
     runs-on: ubuntu-22.04
     timeout-minutes: 45
     env:
@@ -186,42 +173,3 @@ jobs:
             build/app/outputs/apk/release/build-info.txt
           if-no-files-found: error
           retention-days: 30
-
-      - name: Start automated fork release
-        if: ${{ inputs.publish_release }}
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          FORK_RELEASE_TAG: ${{ inputs.release_tag }}
-        run: |
-          set -euo pipefail
-          test "$FORK_ANDROID_ABI" = arm64-v8a
-          test -n "$FORK_RELEASE_TAG"
-          gh workflow run main.yml --repo "$GITHUB_REPOSITORY" --ref "$FORK_RELEASE_TAG" \
-            -f build_macos=false -f build_ios=false -f build_android=false \
-            -f build_windows=false -f build_linux=false -f build_linux_arm64=false \
-            -f publish_release=true -f allow_personal_trigger=false \
-            -f release_tag="$FORK_RELEASE_TAG" -f fork_android_run_id="$GITHUB_RUN_ID"
-
-  publish_existing:
-    if: ${{ inputs.publish_release && inputs.source_run_id }}
-    runs-on: ubuntu-22.04
-    timeout-minutes: 5
-    steps:
-      - name: Publish an existing verified ARM64 build
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          FORK_SOURCE_RUN_ID: ${{ inputs.source_run_id }}
-          FORK_RELEASE_TAG: ${{ inputs.release_tag }}
-        run: |
-          set -euo pipefail
-          test -n "$FORK_RELEASE_TAG"
-          run="$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$FORK_SOURCE_RUN_ID")"
-          release_sha="$(gh api "repos/$GITHUB_REPOSITORY/git/ref/tags/$FORK_RELEASE_TAG" --jq .object.sha)"
-          test "$(jq -r .head_sha <<< "$run")" = "$release_sha"
-          test "$(jq -r .path <<< "$run")" = '.github/workflows/android-fork.yml'
-          test "$(jq -r .conclusion <<< "$run")" = success
-          gh workflow run main.yml --repo "$GITHUB_REPOSITORY" --ref "$FORK_RELEASE_TAG" \
-            -f build_macos=false -f build_ios=false -f build_android=false \
-            -f build_windows=false -f build_linux=false -f build_linux_arm64=false \
-            -f publish_release=true -f allow_personal_trigger=false \
-            -f release_tag="$FORK_RELEASE_TAG" -f fork_android_run_id="$FORK_SOURCE_RUN_ID"
