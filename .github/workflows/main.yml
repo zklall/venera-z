@@ -1,8 +1,6 @@
 name: Build ALL
 run-name: Build ALL
 on:
-  push:
-    branches: [master]
   pull_request:
     branches: [master]
   workflow_dispatch:
@@ -55,8 +53,6 @@ on:
         description: 'Publish the ARM64 APK from an existing fork build run'
         required: false
         type: string
-  release:
-    types: [published]
 
 permissions:
   contents: write
