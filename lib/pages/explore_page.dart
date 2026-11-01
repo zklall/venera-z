@@ -33,7 +33,7 @@ class _ExplorePageState extends State<ExplorePage>
 
   Map<String, (ComicSource, ExplorePageData)> readPageDefinitions() {
     final result = <String, (ComicSource, ExplorePageData)>{};
-    for (final source in ComicSource.all()) {
+    for (final source in ComicSource.visible()) {
       for (final page in source.explorePages) {
         result.putIfAbsent(page.title, () => (source, page));
       }
@@ -129,7 +129,7 @@ class _ExplorePageState extends State<ExplorePage>
       );
 
   Tab buildTab(String i) {
-    var comicSource = ComicSource.all()
+    var comicSource = ComicSource.visible()
         .firstWhere((e) => e.explorePages.any((e) => e.title == i));
     return Tab(text: i.ts(comicSource.key), key: Key(i));
   }
@@ -284,7 +284,7 @@ class _SingleExplorePageState extends AutomaticGlobalState<_SingleExplorePage>
   @override
   void initState() {
     super.initState();
-    for (var source in ComicSource.all()) {
+    for (var source in ComicSource.visible()) {
       for (var d in source.explorePages) {
         if (d.title == widget.title) {
           data = d;

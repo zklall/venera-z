@@ -250,6 +250,7 @@ class Appdata with Init {
     "authorizationRequired",
     "recordReadingStatistics",
     "incognitoMode",
+    "incognitoOnlySources",
     "customImageProcessing",
     "webdav",
     "disableSyncFields",
@@ -479,6 +480,7 @@ class Settings with ChangeNotifier {
     'authorizationRequired': false,
     'recordReadingStatistics': true,
     'incognitoMode': false,
+    'incognitoOnlySources': <String>[],
     'onClickFavorite': 'viewDetail', // viewDetail, read
     'enableDnsOverrides': false,
     'dnsOverrides': {},

@@ -11,7 +11,7 @@ void handleLinks() {
 }
 
 Future<bool> handleAppLink(Uri uri) async {
-  for(var source in ComicSource.all()) {
+  for(var source in ComicSource.visible()) {
     if(source.linkHandler != null) {
       if(source.linkHandler!.domains.contains(uri.host)) {
         var id = source.linkHandler!.linkToId(uri.toString());

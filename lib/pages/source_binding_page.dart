@@ -122,7 +122,7 @@ class _SourceBindingPageState extends State<SourceBindingPage> {
   Widget build(BuildContext context) => ListenableBuilder(
     listenable: Listenable.merge([appdata.settings, ComicSourceManager()]),
     builder: (context, _) {
-      final sources = ComicSource.all()
+      final sources = ComicSource.visible()
           .where((s) => ComicSourceLibraryManager.isUnbound(s.key))
           .toList();
       return Scaffold(

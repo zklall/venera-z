@@ -496,11 +496,14 @@ class _MultiPagesFilter extends StatefulWidget {
     required this.title,
     required this.settingsIndex,
     required this.pages,
+    this.preservedKeys = const {},
   });
 
   final String title;
 
   final String settingsIndex;
+
+  final Set<String> preservedKeys;
 
   // key - name
   final Map<String, String> pages;
@@ -516,6 +519,7 @@ class _MultiPagesFilterState extends State<_MultiPagesFilter> {
   void initState() {
     keys = List.from(appdata.settings[widget.settingsIndex]);
     keys.remove("");
+    keys.removeWhere(widget.preservedKeys.contains);
     super.initState();
   }
 
@@ -684,7 +688,21 @@ class _MultiPagesFilterState extends State<_MultiPagesFilter> {
   }
 
   void updateSetting() {
-    appdata.settings[widget.settingsIndex] = keys;
+    final original = (appdata.settings[widget.settingsIndex] as List)
+        .whereType<String>();
+    final remaining = keys.iterator;
+    final merged = <String>[];
+    for (final key in original) {
+      if (widget.preservedKeys.contains(key)) {
+        merged.add(key);
+      } else if (remaining.moveNext()) {
+        merged.add(remaining.current);
+      }
+    }
+    while (remaining.moveNext()) {
+      merged.add(remaining.current);
+    }
+    appdata.settings[widget.settingsIndex] = merged;
     appdata.saveData();
   }
 }

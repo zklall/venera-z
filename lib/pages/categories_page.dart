@@ -29,7 +29,7 @@ class _CategoriesPageState extends State<CategoriesPage>
     var categories = List.from(
       appdata.settings["categories"],
     ).whereType<String>().toList();
-    var allCategories = ComicSource.all()
+    var allCategories = ComicSource.visible()
         .map((e) => e.categoryData?.key)
         .where((element) => element != null)
         .map((e) => e!)
@@ -38,10 +38,18 @@ class _CategoriesPageState extends State<CategoriesPage>
         .where((element) => allCategories.contains(element))
         .toList();
     if (!categories.isEqualTo(this.categories)) {
+      final selected = this.categories.isEmpty ? null : this.categories[controller.index];
+      final selectedIndex = categories.indexOf(selected ?? '');
+      final previousController = controller;
       setState(() {
         this.categories = categories;
+        controller = TabController(
+          length: categories.length,
+          initialIndex: selectedIndex < 0 ? 0 : selectedIndex,
+          vsync: this,
+        );
       });
-      controller = TabController(length: categories.length, vsync: this);
+      previousController.dispose();
     }
   }
 
@@ -51,7 +59,7 @@ class _CategoriesPageState extends State<CategoriesPage>
     var categories = List.from(
       appdata.settings["categories"],
     ).whereType<String>().toList();
-    var allCategories = ComicSource.all()
+    var allCategories = ComicSource.visible()
         .map((e) => e.categoryData?.key)
         .where((element) => element != null)
         .map((e) => e!)
@@ -60,7 +68,7 @@ class _CategoriesPageState extends State<CategoriesPage>
         .where((element) => allCategories.contains(element))
         .toList();
     appdata.settings.addListener(onSettingsChanged);
-    controller = TabController(length: categories.length, vsync: this);
+    controller = TabController(length: this.categories.length, vsync: this);
   }
 
   void addPage() {
@@ -148,7 +156,7 @@ class _CategoryPage extends StatelessWidget {
   CategoryData get data => getCategoryDataWithKey(category);
 
   String findComicSourceKey() {
-    for (var source in ComicSource.all()) {
+    for (var source in ComicSource.visible()) {
       if (source.categoryData?.key == category) {
         return source.key;
       }

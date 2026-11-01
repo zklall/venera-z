@@ -78,7 +78,7 @@ class _SearchPageState extends State<SearchPage> {
 
   bool canHandleUrl(String text) {
     if (!text.isURL) return false;
-    for (var source in ComicSource.all()) {
+    for (var source in ComicSource.visible()) {
       if (source.linkHandler != null) {
         var uri = Uri.parse(text);
         if (source.linkHandler!.domains.contains(uri.host)) {
@@ -100,7 +100,7 @@ class _SearchPageState extends State<SearchPage> {
     } else {
       var text = controller.text;
 
-      for (var comicSource in ComicSource.all()) {
+      for (var comicSource in ComicSource.visible()) {
         if (comicSource.idMatcher?.hasMatch(text) ?? false) {
           suggestions.add(Pair(
             "**${comicSource.key}**",
@@ -179,7 +179,7 @@ class _SearchPageState extends State<SearchPage> {
   }
 
   void findSearchSources() {
-    var all = ComicSource.all()
+    var all = ComicSource.visible()
         .where((e) => e.searchPageData != null)
         .map((e) => e.key)
         .toList();

@@ -83,13 +83,6 @@ class _AboutSettingsState extends State<AboutSettings> {
             launchUrlString(AppReleaseSource.repositoryUrl);
           },
         ).toSliver(),
-        ListTile(
-          title: Text("Telegram group chat".tl),
-          trailing: const Icon(Icons.open_in_new),
-          onTap: () {
-            launchUrlString("https://t.me/+-Z0d_TB_Alk0YzU1");
-          },
-        ).toSliver(),
       ],
     );
   }

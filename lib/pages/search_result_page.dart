@@ -445,7 +445,7 @@ class _SearchSettingsDialogState extends State<_SearchSettingsDialog> {
 
   @override
   Widget build(BuildContext context) {
-    var sources = ComicSource.all();
+    var sources = ComicSource.visible();
     var enabled = appdata.settings['searchSources'] as List;
     sources.removeWhere((e) {
       return !enabled.contains(e.key);

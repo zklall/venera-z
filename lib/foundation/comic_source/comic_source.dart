@@ -47,6 +47,30 @@ class ComicSourceManager with ChangeNotifier, Init {
 
   List<ComicSource> all() => List.from(_sources);
 
+  bool isIncognitoOnly(String key) =>
+      (appdata.settings['incognitoOnlySources'] as List? ?? const []).contains(
+        key,
+      );
+
+  bool isVisible(String key) => appdata.isIncognito || !isIncognitoOnly(key);
+
+  List<ComicSource> visible() =>
+      _sources.where((source) => isVisible(source.key)).toList();
+
+  Future<void> setIncognitoOnly(String key, bool enabled) async {
+    final keys = (appdata.settings['incognitoOnlySources'] as List? ?? const [])
+        .whereType<String>()
+        .toSet();
+    if (enabled) {
+      keys.add(key);
+    } else {
+      keys.remove(key);
+    }
+    appdata.settings['incognitoOnlySources'] = keys.toList();
+    await appdata.saveData(false);
+    notifyListeners();
+  }
+
   ComicSource? find(String key) =>
       _sources.firstWhereOrNull((element) => element.key == key);
 
@@ -278,6 +302,8 @@ enum ComicSourceUpdateState {
 
 class ComicSource {
   static List<ComicSource> all() => ComicSourceManager().all();
+
+  static List<ComicSource> visible() => ComicSourceManager().visible();
 
   static ComicSource? find(String key) => ComicSourceManager().find(key);
 

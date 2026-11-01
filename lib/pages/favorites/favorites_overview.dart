@@ -42,7 +42,7 @@ class _FavoritesOverviewState extends State<_FavoritesOverview> {
   }
 
   List<FavoriteData> get _networkFavorites {
-    final available = ComicSource.all()
+    final available = ComicSource.visible()
         .where((source) => source.favoriteData != null)
         .map((source) => source.favoriteData!)
         .toList();

@@ -71,7 +71,7 @@ class _ExploreSettingsState extends State<ExploreSettings> {
             '_aggregated_': "Aggregated".tl,
             ...((){
               var map = <String, String>{};
-              for (var c in ComicSource.all()) {
+              for (var c in ComicSource.visible()) {
                 map[c.key] = c.name;
               }
               return map;
@@ -200,9 +200,27 @@ class _ManageBlockingWordViewState extends State<_ManageBlockingWordView> {
   }
 }
 
+Set<String> _hiddenPageKeys(String setting) {
+  final manager = ComicSourceManager();
+  Iterable<String> keys(ComicSource source) => switch (setting) {
+    'explore_pages' => source.explorePages.map((page) => page.title),
+    'categories' => [if (source.categoryData != null) source.categoryData!.key],
+    'favorites' => [if (source.favoriteData != null) source.favoriteData!.key],
+    'searchSources' => [if (source.searchPageData != null) source.key],
+    _ => const <String>[],
+  };
+  final hidden = manager
+      .all()
+      .where((source) => !manager.isVisible(source.key))
+      .expand(keys)
+      .toSet();
+  final visible = manager.visible().expand(keys).toSet();
+  return hidden.difference(visible);
+}
+
 Widget setExplorePagesWidget() {
   var pages = <String, String>{};
-  for (var c in ComicSource.all()) {
+  for (var c in ComicSource.visible()) {
     for (var page in c.explorePages) {
       pages[page.title] = page.title.ts(c.key);
     }
@@ -211,12 +229,13 @@ Widget setExplorePagesWidget() {
     title: "Explore Pages".tl,
     settingsIndex: "explore_pages",
     pages: pages,
+    preservedKeys: _hiddenPageKeys("explore_pages"),
   );
 }
 
 Widget setCategoryPagesWidget() {
   var pages = <String, String>{};
-  for (var c in ComicSource.all()) {
+  for (var c in ComicSource.visible()) {
     if (c.categoryData != null) {
       pages[c.categoryData!.key] = c.categoryData!.title;
     }
@@ -225,12 +244,13 @@ Widget setCategoryPagesWidget() {
     title: "Category Pages".tl,
     settingsIndex: "categories",
     pages: pages,
+    preservedKeys: _hiddenPageKeys("categories"),
   );
 }
 
 Widget setFavoritesPagesWidget() {
   var pages = <String, String>{};
-  for (var c in ComicSource.all()) {
+  for (var c in ComicSource.visible()) {
     if (c.favoriteData != null) {
       pages[c.favoriteData!.key] = c.favoriteData!.title;
     }
@@ -239,12 +259,13 @@ Widget setFavoritesPagesWidget() {
     title: "Network Favorite Pages".tl,
     settingsIndex: "favorites",
     pages: pages,
+    preservedKeys: _hiddenPageKeys("favorites"),
   );
 }
 
 Widget setSearchSourcesWidget() {
   var pages = <String, String>{};
-  for (var c in ComicSource.all()) {
+  for (var c in ComicSource.visible()) {
     if (c.searchPageData != null) {
       pages[c.key] = c.name;
     }
@@ -253,6 +274,7 @@ Widget setSearchSourcesWidget() {
     title: "Search Sources".tl,
     settingsIndex: "searchSources",
     pages: pages,
+    preservedKeys: _hiddenPageKeys("searchSources"),
   );
 }
 

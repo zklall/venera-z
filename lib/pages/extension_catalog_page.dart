@@ -276,9 +276,19 @@ class _ExtensionCatalogPageState extends State<ExtensionCatalogPage> {
       'all' => 'Multiple languages'.tl,
       _ => code,
     };
+    final hiddenPackages = appdata.isIncognito
+        ? <String>{}
+        : ComicSource.all()
+              .whereType<MihonSource>()
+              .where(
+                (source) => ComicSourceManager().isIncognitoOnly(source.key),
+              )
+              .map((source) => source.packageName)
+              .toSet();
     final visible = (extensions ?? <MihonExtension>[])
         .where(
           (e) =>
+              !hiddenPackages.contains(e.package) &&
               (language.isEmpty ||
                   e.languages.contains(language) ||
                   e.languages.contains('all')) &&

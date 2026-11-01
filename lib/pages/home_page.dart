@@ -532,7 +532,10 @@ class _SyncDataWidgetState extends State<_SyncDataWidget>
                   InkWell(
                     borderRadius: BorderRadius.circular(16),
                     onTap: () {
-                      showAppErrorDetails(App.rootContext, DataSync().lastError!);
+                      showAppErrorDetails(
+                        App.rootContext,
+                        DataSync().lastError!,
+                      );
                     },
                     child: Container(
                       padding: const EdgeInsets.symmetric(
@@ -1012,26 +1015,29 @@ class _ComicSourceWidgetState extends State<_ComicSourceWidget> {
 
   void onComicSourceChange() {
     setState(() {
-      comicSources = ComicSource.all().map((e) => e.name).toList();
+      comicSources = ComicSource.visible().map((e) => e.name).toList();
     });
   }
 
   @override
   void initState() {
-    comicSources = ComicSource.all().map((e) => e.name).toList();
+    comicSources = ComicSource.visible().map((e) => e.name).toList();
     ComicSourceManager().addListener(onComicSourceChange);
+    appdata.settings.addListener(onComicSourceChange);
     super.initState();
   }
 
   @override
   void dispose() {
     ComicSourceManager().removeListener(onComicSourceChange);
+    appdata.settings.removeListener(onComicSourceChange);
     super.dispose();
   }
 
   int get _availableUpdates {
     int c = 0;
     ComicSourceManager().availableUpdates.forEach((key, version) {
+      if (!ComicSourceManager().isVisible(key)) return;
       var source = ComicSource.find(key);
       if (source != null) {
         if (compareSemVer(version, source.version)) {

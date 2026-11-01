@@ -127,6 +127,8 @@ void main() {
       expect(isNewerAppVersion('2.4.10', '2.4.9'), isTrue);
       expect(isNewerAppVersion('2.5', '2.4.6'), isTrue);
       expect(isNewerAppVersion('2.4.6.1', '2.4.6'), isTrue);
+      expect(isNewerAppVersion('2.7.2', '2.7.1'), isTrue);
+      expect(isNewerAppVersion('2.7.2', '2.7.2'), isFalse);
       expect(isNewerAppVersion('2.4.6+246', '2.4.6'), isFalse);
       expect(isNewerAppVersion('2.4', '2.4.0'), isFalse);
       expect(isNewerAppVersion('3.0.0-beta', '2.4.6'), isFalse);

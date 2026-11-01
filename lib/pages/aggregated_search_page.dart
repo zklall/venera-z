@@ -25,7 +25,7 @@ class _AggregatedSearchPageState extends State<AggregatedSearchPage> {
 
   @override
   void initState() {
-    var all = ComicSource.all()
+    var all = ComicSource.visible()
         .where((e) => e.searchPageData != null)
         .map((e) => e.key)
         .toList();

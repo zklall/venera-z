@@ -470,14 +470,14 @@ class ComicSourcePage extends StatelessWidget {
           }
         } catch (e) {
           Log.warning("ComicSource", "Invalid version for ${source.key}: $e");
-          task.addError('${source.name}: $e');
+          if (manager.isVisible(source.key)) task.addError('${source.name}: $e');
         }
       }
     }
     ComicSourceLibraryManager.setProvenanceBatch(provenanceUpdates);
     manager.setAvailableUpdates(updates);
     Log.info("ComicSource", "Source check complete: ${updates.length} updates");
-    return updates.length;
+    return updates.keys.where(manager.isVisible).length;
   }
 
   /// Startup checks share the same jobs as the manual controls.
@@ -500,6 +500,7 @@ class ComicSourcePage extends StatelessWidget {
   static List<String> automaticUpdateKeys() {
     final manager = ComicSourceManager();
     return manager.availableUpdates.keys.where((key) {
+      if (!manager.isVisible(key)) return false;
       final provenance = manager.provenanceFor(key);
       final origin = provenance?.originId;
       return origin != null &&
@@ -516,6 +517,7 @@ class ComicSourcePage extends StatelessWidget {
                 ? automaticUpdateKeys()
                 : manager.availableUpdates.keys.toList())
             .where((key) {
+              if (!manager.isVisible(key)) return false;
               final source = ComicSource.find(key);
               return source is! MihonSource || packages.add(source.packageName);
             })
@@ -597,12 +599,14 @@ class _BodyState extends State<_Body> {
   void initState() {
     super.initState();
     ComicSourceManager().addListener(updateUI);
+    appdata.settings.addListener(updateUI);
   }
 
   @override
   void dispose() {
     super.dispose();
     ComicSourceManager().removeListener(updateUI);
+    appdata.settings.removeListener(updateUI);
   }
 
   @override
@@ -647,7 +651,7 @@ class _BodyState extends State<_Body> {
           ],
         ),
         buildCard(context),
-        for (var source in ComicSource.all())
+        for (var source in ComicSource.visible())
           _SliverComicSource(
             key: ValueKey(source.key),
             source: source,
@@ -661,7 +665,11 @@ class _BodyState extends State<_Body> {
   }
 
   void _showReorderDialog(BuildContext context) {
-    var keys = ComicSourceManager().all().map((source) => source.key).toList();
+    final allKeys = ComicSourceManager()
+        .all()
+        .map((source) => source.key)
+        .toList();
+    var keys = ComicSource.visible().map((source) => source.key).toList();
     showDialog(
       context: context,
       builder: (dialogContext) => StatefulBuilder(
@@ -696,7 +704,16 @@ class _BodyState extends State<_Body> {
             ),
             FilledButton(
               onPressed: () async {
-                await ComicSourceManager().setOrder(keys);
+                final visibleKeys = keys.iterator;
+                final ordered = <String>[];
+                for (final key in allKeys) {
+                  if (!ComicSourceManager().isVisible(key)) {
+                    ordered.add(key);
+                  } else if (visibleKeys.moveNext()) {
+                    ordered.add(visibleKeys.current);
+                  }
+                }
+                await ComicSourceManager().setOrder(ordered);
                 if (dialogContext.mounted) Navigator.pop(dialogContext);
               },
               child: Text('Confirm'.tl),
@@ -887,7 +904,7 @@ class _BodyState extends State<_Body> {
               const _CheckUpdatesButton(),
             ],
           ),
-          if (ComicSourceManager().availableUpdates.isNotEmpty)
+          if (ComicSourceManager().availableUpdates.keys.any(ComicSourceManager().isVisible))
             TextButton.icon(
               onPressed: showSourceUpdateDialog,
               icon: const Icon(Icons.system_update_alt),
@@ -1383,12 +1400,19 @@ class _LibraryCatalogPageState extends State<_LibraryCatalogPage> {
       );
     }
     final installed = ComicSource.all().map((source) => source.key).toSet();
+    final visibleEntries = entries!.where((entry) {
+      final key = resolveCatalogSourceKey(
+        entry['key']?.toString() ?? '',
+        installed,
+      );
+      return ComicSourceManager().isVisible(key);
+    }).toList();
     return Scaffold(
       appBar: AppBar(title: Text(widget.library.name)),
       body: ListView.builder(
-        itemCount: entries!.length,
+        itemCount: visibleEntries.length,
         itemBuilder: (context, index) {
-          final entry = entries![index];
+          final entry = visibleEntries[index];
           final key = resolveCatalogSourceKey(
             entry['key']?.toString() ?? '',
             installed,
@@ -1583,9 +1607,13 @@ class __EditFilePageState extends State<_EditFilePage> {
 
 void showSourceUpdateDialog([Map<String, String>? checkedUpdates]) {
   final current = ComicSourceManager().availableUpdates;
-  final updates = checkedUpdates ?? current;
-  final stillCurrent =
-      updates.length == current.length &&
+  final updates = Map<String, String>.fromEntries(
+    (checkedUpdates ?? current).entries.where(
+      (entry) => ComicSourceManager().isVisible(entry.key),
+    ),
+  );
+  final visibleCurrent = current.keys.where(ComicSourceManager().isVisible).toSet();
+  final stillCurrent = updates.length == visibleCurrent.length &&
       updates.entries.every((entry) => current[entry.key] == entry.value);
   final text = updates.entries
       .map(
@@ -1862,6 +1890,13 @@ class _SliverComicSourceState extends State<_SliverComicSource> {
                         widget.edit(source);
                       case 'update':
                         widget.update(source);
+                      case 'privacy':
+                        unawaited(
+                          ComicSourceManager().setIncognitoOnly(
+                            source.key,
+                            !ComicSourceManager().isIncognitoOnly(source.key),
+                          ),
+                        );
                       case 'delete':
                         widget.delete(source);
                     }
@@ -1878,6 +1913,14 @@ class _SliverComicSourceState extends State<_SliverComicSource> {
                         child: Text('Edit config'.tl),
                       ),
                     PopupMenuItem(value: 'update', child: Text('Update'.tl)),
+                    PopupMenuItem(
+                      value: 'privacy',
+                      child: Text(
+                        ComicSourceManager().isIncognitoOnly(source.key)
+                            ? 'Show in all modes'.tl
+                            : 'Show only in incognito mode'.tl,
+                      ),
+                    ),
                     PopupMenuItem(
                       value: 'delete',
                       enabled: updateState == null,

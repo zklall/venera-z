@@ -1,5 +1,7 @@
 {
   "zh_CN": {
+    "Show only in incognito mode": "仅无痕模式显示",
+    "Show in all modes": "所有模式显示",
     "Choose two pages for a spread": "选择两页组成跨页",
     "Numbers refer to single-page images. Select the pair that belongs together.": "页码按单页原图计算，选择应当拼在一起的两页。",
     "Pages @first–@last": "第 @first–@last 页",
@@ -801,6 +803,8 @@
     "Update Venera Z or the source extension, then try again.": "请更新 Venera Z 或漫画源扩展后重试。"
   },
   "zh_TW": {
+    "Show only in incognito mode": "僅無痕模式顯示",
+    "Show in all modes": "所有模式顯示",
     "Choose two pages for a spread": "選擇兩頁組成跨頁",
     "Numbers refer to single-page images. Select the pair that belongs together.": "頁碼按單頁原圖計算，選擇應當拼在一起的兩頁。",
     "Pages @first–@last": "第 @first–@last 頁",

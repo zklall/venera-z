@@ -48,6 +48,8 @@ void main() {
     directory = await Directory.systemTemp.createTemp('source-ui-');
     App.dataPath = directory.path;
     appdata.settings['language'] = 'zh-CN';
+    appdata.settings['incognitoMode'] = false;
+    appdata.settings['incognitoOnlySources'] = <String>[];
     appdata.settings['liquidGlass'] = false;
     appdata.settings['comicSourceLibraries'] = [];
     appdata.settings['comicSourceProvenance'] = {};
@@ -56,7 +58,20 @@ void main() {
   });
   tearDown(() async {
     ComicSourceManager().remove(source.key);
+    appdata.settings['incognitoMode'] = false;
+    appdata.settings['incognitoOnlySources'] = <String>[];
     await directory.delete(recursive: true);
+  });
+  test('source privacy setting can be restored and saved', () async {
+    await ComicSourceManager().setIncognitoOnly(source.key, true);
+    expect(ComicSource.visible(), isNot(contains(source)));
+    expect(await File('${directory.path}/appdata.json').readAsString(), contains(source.key));
+    appdata.syncData({'settings': {'incognitoOnlySources': <String>[]}}, persist: false);
+    expect(ComicSource.visible(), isNot(contains(source)));
+    await ComicSourceManager().setIncognitoOnly(source.key, false);
+    expect(ComicSource.visible(), contains(source));
+    final saved = await File('${directory.path}/appdata.json').readAsString();
+    expect(saved, contains('incognitoOnlySources'));
   });
   testWidgets('source entry actions are named and settings expand on demand', (
     tester,
@@ -105,4 +120,46 @@ void main() {
       expect(find.text('添加'), findsOneWidget);
     },
   );
+  testWidgets('source only appears while incognito is enabled', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(600, 900);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    appdata.settings['searchSources'] = <String>[source.key];
+    await tester.pumpWidget(
+      MaterialApp(
+        navigatorKey: App.rootNavigatorKey,
+        builder: (context, child) => OverlayWidget(child!),
+        home: const ComicSourcePage(),
+      ),
+    );
+    await tester.pumpAndSettle();
+    final header = find.byKey(const ValueKey('source-header-ui_fixture'));
+    expect(header, findsOneWidget);
+    await tester.tap(
+      find.descendant(
+        of: header,
+        matching: find.byType(PopupMenuButton<String>),
+      ),
+    );
+    await tester.pumpAndSettle();
+    await tester.runAsync(() async {
+      await tester.tap(find.text('仅无痕模式显示'));
+      await Future<void>.delayed(const Duration(milliseconds: 150));
+    });
+    await tester.pumpAndSettle();
+    expect(header, findsNothing);
+    expect(ComicSource.all(), contains(source));
+    expect(ComicSource.visible(), isNot(contains(source)));
+    expect(appdata.settings['searchSources'], contains(source.key));
+    appdata.settings['incognitoMode'] = true;
+    await tester.pumpAndSettle();
+    expect(header, findsOneWidget);
+    appdata.settings['incognitoMode'] = false;
+    await tester.pumpAndSettle();
+    expect(header, findsNothing);
+  });
+
 }

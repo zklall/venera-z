@@ -100,7 +100,7 @@ class _ToolboxSheet extends StatelessWidget {
 bool _handleComicLink(String url) {
   final uri = Uri.tryParse(url);
   if (uri == null) return false;
-  for (final source in ComicSource.all()) {
+  for (final source in ComicSource.visible()) {
     final handler = source.linkHandler;
     if (handler == null || !handler.domains.contains(uri.host)) continue;
     try {
