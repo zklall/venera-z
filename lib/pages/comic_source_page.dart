@@ -14,6 +14,10 @@ import 'package:venera/foundation/comic_source/comic_source.dart';
 import 'package:venera/foundation/comic_source/availability.dart';
 import 'package:venera/foundation/image_provider/reader_image.dart';
 import 'package:venera/foundation/comic_source/source_library.dart';
+import 'package:venera/foundation/comic_source/mihon_source.dart';
+import 'package:venera/foundation/comic_source/mihon_catalog.dart';
+import 'package:venera/foundation/comic_source/source_catalog.dart';
+import 'package:venera/pages/extension_catalog_page.dart';
 import 'package:venera/foundation/log.dart';
 import 'package:venera/network/app_dio.dart';
 import 'package:venera/network/cookie_jar.dart';
@@ -119,6 +123,23 @@ class ComicSourcePage extends StatelessWidget {
         "ComicSource",
         "Update start: ${source.key} v${source.version} ${MyLogInterceptor.safeUrl(source.url)}",
       );
+      if (source is MihonSource) {
+        final updated = await source.updateFromUrl(
+          downloadUrl,
+          canApply: () =>
+              task?.cancelRequested != true &&
+              !manager.isUpdateCancelled(source.key) &&
+              canApply?.call() != false,
+        );
+        if (!updated) return false;
+        for (final native in ComicSource.all().whereType<MihonSource>().where(
+          (s) => s.packageName == source.packageName,
+        )) {
+          manager.removeAvailableUpdate(native.key);
+        }
+        manager.setUpdateState(source.key, ComicSourceUpdateState.success);
+        return true;
+      }
       // jsDelivr aggressively caches @main files. A cache-busting query is
       // required here because the source URL itself intentionally stays
       // stable for future updates.
@@ -232,7 +253,9 @@ class ComicSourcePage extends StatelessWidget {
     } finally {
       if (task != null) task.onCancel = null;
       parser?.discardParsedSource();
-      await io.File('${source.filePath}.update.tmp').deleteIgnoreError();
+      if (source is! MihonSource) {
+        await io.File('${source.filePath}.update.tmp').deleteIgnoreError();
+      }
       manager.finishUpdate(source.key);
     }
   }
@@ -292,26 +315,30 @@ class ComicSourcePage extends StatelessWidget {
         if (loadCatalog != null) {
           raw = await loadCatalog(library);
         } else {
-          final response = await AppDio().get<String>(
-            library.url,
-            options: Options(headers: {"cache-time": "no"}),
-          );
-          if (response.statusCode != 200 || response.data == null) {
-            throw StateError(
-              'Source catalog request failed: ${response.statusCode}',
-            );
-          }
-          final decoded = jsonDecode(response.data!);
-          if (decoded is! List) {
-            throw const FormatException('Invalid source catalog');
-          }
-          raw = decoded;
+          raw = await fetchCompatibleSourceCatalog(library.url);
         }
         if (!isCurrentLibrary(library)) {
           throw StateError('Source library settings changed while checking');
         }
         final catalog = <String, List<_CatalogSource>>{};
         for (final entry in raw.whereType<Map>()) {
+          if (entry['_format'] == 'mihon') {
+            for (final native
+                in ComicSource.all().whereType<MihonSource>().where(
+                  (s) => s.packageName == entry['key'],
+                )) {
+              final downloadUrl = entry['url']?.toString();
+              (catalog[native.key] ??= <_CatalogSource>[]).add((
+                version: entry['version']?.toString() ?? '',
+                url: downloadUrl,
+                fileName: downloadUrl == null
+                    ? null
+                    : Uri.parse(downloadUrl).pathSegments.last,
+              ));
+              (offeredBy[native.key] ??= <String>[]).add(library.id);
+            }
+            continue;
+          }
           final rawKey = entry['key']?.toString();
           final key = rawKey == null
               ? null
@@ -409,7 +436,7 @@ class ComicSourcePage extends StatelessWidget {
           (entry) => entry.fileName == preferredFileName,
         );
         if (selected == null &&
-            provenance.sourceFileName == null &&
+            (source is MihonSource || provenance.sourceFileName == null) &&
             candidates.isNotEmpty) {
           selected = candidates.first;
           for (final candidate in candidates.skip(1)) {
@@ -424,6 +451,11 @@ class ComicSourcePage extends StatelessWidget {
         }
       }
       if (selected != null) {
+        if (source is MihonSource && selected.fileName != null) {
+          // Extension APK filenames include the version; package identity is stable.
+          provenance.sourceFileName = selected.fileName;
+          provenanceUpdates[source.key] = provenance;
+        }
         if (selected.fileName == preferredFileName &&
             provenance.sourceFileName == null) {
           provenance.sourceFileName = preferredFileName;
@@ -478,9 +510,16 @@ class ComicSourcePage extends StatelessWidget {
 
   static Future<SourceUpdateResult> updateAll({bool automatic = false}) {
     final manager = ComicSourceManager();
-    final keys = automatic
-        ? automaticUpdateKeys()
-        : manager.availableUpdates.keys.toList();
+    final packages = <String>{};
+    final keys =
+        (automatic
+                ? automaticUpdateKeys()
+                : manager.availableUpdates.keys.toList())
+            .where((key) {
+              final source = ComicSource.find(key);
+              return source is! MihonSource || packages.add(source.packageName);
+            })
+            .toList();
     final urls = {for (final key in keys) key: manager.updateUrlFor(key)};
     return runSourceUpdates(
       keys: keys,
@@ -574,19 +613,36 @@ class _BodyState extends State<_Body> {
           title: Text('Comic Source'.tl),
           style: AppbarStyle.shadow,
           actions: [
-            Tooltip(
-              message: 'Reorder'.tl,
-              child: IconButton(
-                icon: const Icon(Icons.reorder),
-                onPressed: () => _showReorderDialog(context),
-              ),
-            ),
-            Tooltip(
-              message: 'Sort by name'.tl,
-              child: IconButton(
-                icon: const Icon(Icons.sort_by_alpha),
-                onPressed: () => ComicSourceManager().sortByName(),
-              ),
+            PopupMenuButton<String>(
+              tooltip: 'More'.tl,
+              onSelected: (value) {
+                switch (value) {
+                  case 'reorder':
+                    _showReorderDialog(context);
+                  case 'sort':
+                    ComicSourceManager().sortByName();
+                  case 'bind':
+                    context.to(() => const SourceBindingPage());
+                  case 'auto':
+                    appdata.settings['autoUpdateComicSources'] =
+                        appdata.settings['autoUpdateComicSources'] != true;
+                    unawaited(appdata.saveData());
+                    setState(() {});
+                  case 'help':
+                    help();
+                }
+              },
+              itemBuilder: (_) => [
+                PopupMenuItem(value: 'reorder', child: Text('Reorder'.tl)),
+                PopupMenuItem(value: 'sort', child: Text('Sort by name'.tl)),
+                CheckedPopupMenuItem(
+                  value: 'auto',
+                  checked: appdata.settings['autoUpdateComicSources'] == true,
+                  child: Text('Automatically update comic sources'.tl),
+                ),
+                PopupMenuItem(value: 'bind', child: Text('Manual binding'.tl)),
+                PopupMenuItem(value: 'help', child: Text('Help'.tl)),
+              ],
             ),
           ],
         ),
@@ -652,6 +708,35 @@ class _BodyState extends State<_Body> {
   }
 
   void delete(ComicSource source) {
+    if (source is MihonSource) {
+      showConfirmDialog(
+        context: context,
+        title: 'Uninstall extension'.tl,
+        content:
+            '${source.packageName}\n${'All sources in this extension will be removed.'.tl}',
+        onConfirm: () async {
+          try {
+            await MihonSource.uninstallPackage(source.packageName);
+            final removed = ComicSource.all()
+                .whereType<MihonSource>()
+                .where((s) => s.packageName == source.packageName)
+                .toList();
+            for (final item in removed) {
+              ComicSourceManager().remove(item.key);
+            }
+            appdata.settings['searchSources'] =
+                (appdata.settings['searchSources'] as List)
+                    .where((key) => !removed.any((s) => s.key == key))
+                    .toList();
+            _validatePages();
+            App.forceRebuild();
+          } catch (error) {
+            if (context.mounted) context.showError(error: error);
+          }
+        },
+      );
+      return;
+    }
     showConfirmDialog(
       context: App.rootContext,
       title: "Delete".tl,
@@ -669,6 +754,16 @@ class _BodyState extends State<_Body> {
   }
 
   void edit(ComicSource source) async {
+    if (source is MihonSource) {
+      try {
+        await MihonSource.channel.invokeMethod('settings', {
+          'id': source.nativeId,
+        });
+      } catch (error) {
+        if (context.mounted) context.showError(error: error);
+      }
+      return;
+    }
     if (App.isDesktop) {
       try {
         await Process.run("code", [source.filePath], runInShell: true);
@@ -704,111 +799,137 @@ class _BodyState extends State<_Body> {
     );
   }
 
-  void update(ComicSource source, [bool showLoading = true]) {
-    ComicSourcePage.update(source, showLoading);
+  void update(ComicSource source, [bool showLoading = true]) async {
+    if (source is MihonSource &&
+        ComicSourceManager().updateUrlFor(source.key) == null) {
+      try {
+        await ComicSourcePage.checkComicSourceUpdate();
+        if (!mounted) return;
+        if (ComicSourceManager().updateUrlFor(source.key) == null) {
+          context.showMessage(message: 'No update repository is linked'.tl);
+          return;
+        }
+      } catch (error) {
+        if (mounted) context.showError(error: error);
+        return;
+      }
+    }
+    await ComicSourcePage.update(source, showLoading);
   }
 
-  Widget buildCard(BuildContext context) {
-    return SliverToBoxAdapter(
-      child: SizedBox(
-        width: double.infinity,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            ListTile(
-              title: Text("Add comic source".tl),
-              leading: const Icon(Icons.dashboard_customize),
-            ),
-            TextField(
-              decoration: InputDecoration(
-                hintText: "URL",
-                border: const UnderlineInputBorder(),
-                contentPadding: const EdgeInsets.symmetric(horizontal: 12),
-                suffix: IconButton(
-                  onPressed: () => handleAddSource(url),
-                  icon: const Icon(Icons.check),
-                ),
-              ),
-              onChanged: (value) {
-                url = value;
-              },
-              onSubmitted: handleAddSource,
-            ).paddingHorizontal(16).paddingBottom(8),
-            Wrap(
-              spacing: 8,
-              runSpacing: 8,
-              children: [
-                FilledButton.tonalIcon(
-                  icon: const Icon(Icons.library_books_outlined),
-                  label: Text("Source libraries".tl),
-                  onPressed: () =>
-                      context.to(() => const SourceLibrariesPage()),
-                ),
-                FilledButton.tonalIcon(
-                  icon: Icon(Icons.file_open_outlined),
-                  label: Text("Use a config file".tl),
-                  onPressed: _selectFile,
-                ),
-                FilledButton.tonalIcon(
-                  icon: Icon(Icons.help_outline),
-                  label: Text("Help".tl),
-                  onPressed: help,
-                ),
-                const _CheckUpdatesButton(),
-                if (ComicSourceManager().availableUpdates.isNotEmpty)
-                  FilledButton.tonalIcon(
-                    icon: const Icon(Icons.system_update_alt),
-                    label: Text("Update all".tl),
-                    onPressed: showSourceUpdateDialog,
-                  ),
-                ListenableBuilder(
-                  listenable: Listenable.merge([
-                    appdata.settings,
-                    ComicSourceManager(),
-                  ]),
-                  builder: (context, _) =>
-                      ComicSource.all().any(
-                        (source) =>
-                            ComicSourceLibraryManager.isUnbound(source.key),
-                      )
-                      ? FilledButton.tonalIcon(
-                          icon: const Icon(Icons.link),
-                          label: Text('Manual binding'.tl),
-                          onPressed: () =>
-                              context.to(() => const SourceBindingPage()),
-                        )
-                      : const SizedBox.shrink(),
-                ),
-              ],
-            ).paddingHorizontal(12).paddingVertical(8),
-            const TaskStatusText(taskKey: 'source-check').paddingHorizontal(16),
-            const TaskStatusText(
-              taskKey: 'source-update-all',
-            ).paddingHorizontal(16),
-            ListenableBuilder(
-              listenable: appdata.settings,
-              builder: (context, _) => SwitchListTile(
-                title: Text("Automatically update comic sources".tl),
-                value: appdata.settings['autoUpdateComicSources'] == true,
-                onChanged: (value) {
-                  appdata.settings['autoUpdateComicSources'] = value;
-                  unawaited(appdata.saveData());
-                  if (value) unawaited(ComicSourcePage.runStartupUpdates());
-                },
-              ),
-            ),
-            const SizedBox(height: 8),
-          ],
+  Future<void> _addLink() async {
+    var value = '';
+    final link = await showDialog<String>(
+      context: context,
+      builder: (dialog) => AlertDialog(
+        title: Text('Add from link'.tl),
+        content: TextField(
+          autofocus: true,
+          decoration: InputDecoration(
+            labelText: 'Source or repository link'.tl,
+            border: const OutlineInputBorder(),
+          ),
+          onChanged: (text) => value = text.trim(),
+          onSubmitted: (text) => Navigator.pop(dialog, text.trim()),
         ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialog),
+            child: Text('Cancel'.tl),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(dialog, value),
+            child: Text('Add'.tl),
+          ),
+        ],
       ),
     );
+    if (link != null && link.isNotEmpty) await handleAddSource(link);
   }
 
+  Widget buildCard(BuildContext context) => SliverToBoxAdapter(
+    child: Padding(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              FilledButton.icon(
+                onPressed: _addLink,
+                icon: const Icon(Icons.add_link),
+                label: Text('Add from link'.tl),
+              ),
+              OutlinedButton.icon(
+                onPressed: _selectFile,
+                icon: const Icon(Icons.file_open_outlined),
+                label: Text('Import file'.tl),
+              ),
+              OutlinedButton.icon(
+                onPressed: () => context.to(() => const SourceLibrariesPage()),
+                icon: const Icon(Icons.library_books_outlined),
+                label: Text('Source libraries'.tl),
+              ),
+            ],
+          ),
+          const SizedBox(height: 20),
+          Wrap(
+            spacing: 12,
+            runSpacing: 8,
+            crossAxisAlignment: WrapCrossAlignment.center,
+            children: [
+              Text(
+                'Installed sources'.tl,
+                style: Theme.of(context).textTheme.titleMedium,
+              ),
+              const _CheckUpdatesButton(),
+            ],
+          ),
+          if (ComicSourceManager().availableUpdates.isNotEmpty)
+            TextButton.icon(
+              onPressed: showSourceUpdateDialog,
+              icon: const Icon(Icons.system_update_alt),
+              label: Text('Update all'.tl),
+            ),
+        ],
+      ),
+    ),
+  );
+
   void _selectFile() async {
-    final file = await selectFile(ext: ["js"]);
+    final file = await selectFile(
+      ext: App.isAndroid ? ["js", "apk", "json"] : ["js"],
+    );
     if (file == null) return;
     try {
+      if (file.path.toLowerCase().endsWith('.apk')) {
+        final directory = await Directory.systemTemp.createTemp(
+          'source-import-',
+        );
+        try {
+          final path = '${directory.path}/extension.apk';
+          await file.saveTo(path);
+          if (mounted) {
+            await context.to(() => ExtensionCatalogPage(initialApkPath: path));
+          }
+        } finally {
+          await directory.delete(recursive: true);
+        }
+        return;
+      }
+      if (file.path.toLowerCase().endsWith('.json')) {
+        final data = jsonDecode(utf8.decode(await file.readAsBytes()));
+        final address = data is Map
+            ? data['index_v2'] ?? data['index_v1']
+            : null;
+        if (address is String) {
+          await handleAddSource(address);
+          return;
+        }
+        throw 'This file is a source list. Add its repository link instead.'.tl;
+      }
       var fileName = file.name;
       var bytes = await file.readAsBytes();
       var content = utf8.decode(bytes);
@@ -827,6 +948,14 @@ class _BodyState extends State<_Body> {
 
   Future<void> handleAddSource(String url, {String? originLibraryId}) async {
     if (url.isEmpty) {
+      return;
+    }
+    final uri = Uri.tryParse(url.trim());
+    final last = uri?.pathSegments.lastOrNull ?? '';
+    if (App.isAndroid &&
+        (last.endsWith('.json') || last.endsWith('.pb') || last == 'repo')) {
+      final library = ComicSourceLibraryManager.add('', url.trim());
+      context.to(() => _LibraryCatalogPage(library: library));
       return;
     }
     var splits = url.split("/");
@@ -1165,21 +1294,7 @@ Future<List<Map<String, dynamic>>> loadSourceLibraryCatalog(
     'source-catalog:${library.id}',
     library.name,
     (task) async {
-      final response = await AppDio().get<String>(
-        library.url,
-        options: Options(headers: {"cache-time": "no"}),
-      );
-      if (response.statusCode != 200 || response.data == null) {
-        throw StateError(
-          'Source catalog request failed: ${response.statusCode}',
-        );
-      }
-      final raw = jsonDecode(response.data!);
-      if (raw is! List) throw const FormatException('Invalid source catalog');
-      final entries = raw
-          .whereType<Map>()
-          .map(Map<String, dynamic>.from)
-          .toList();
+      final entries = await fetchCompatibleSourceCatalog(library.url);
       final current = ComicSourceLibraryManager.find(library.id);
       if (current == null || current.url != library.url) {
         throw StateError('Source library settings changed while checking');
@@ -1218,6 +1333,10 @@ class _LibraryCatalogPageState extends State<_LibraryCatalogPage> {
   }
 
   Future<void> _load() async {
+    if (isExtensionRepository(widget.library.url)) {
+      setState(() => loading = false);
+      return;
+    }
     try {
       final result = await loadSourceLibraryCatalog(widget.library);
       if (mounted) {
@@ -1239,6 +1358,13 @@ class _LibraryCatalogPageState extends State<_LibraryCatalogPage> {
 
   @override
   Widget build(BuildContext context) {
+    if (isExtensionRepository(widget.library.url) ||
+        (entries?.any((e) => e['_format'] == 'mihon') ?? false)) {
+      return ExtensionCatalogPage(
+        repository: widget.library.url,
+        title: widget.library.name,
+      );
+    }
     if (loading) {
       return Scaffold(
         appBar: AppBar(title: Text(widget.library.name)),
@@ -1610,6 +1736,7 @@ class _SliverComicSource extends StatefulWidget {
 }
 
 class _SliverComicSourceState extends State<_SliverComicSource> {
+  bool expanded = false;
   ComicSource get source => widget.source;
 
   String? _provenanceText() {
@@ -1650,6 +1777,8 @@ class _SliverComicSourceState extends State<_SliverComicSource> {
         SliverPadding(padding: const EdgeInsets.only(top: 16)),
         SliverToBoxAdapter(
           child: ListTile(
+            key: ValueKey('source-header-${source.key}'),
+            onTap: () => setState(() => expanded = !expanded),
             title: LayoutBuilder(
               builder: (context, constraints) {
                 return Wrap(
@@ -1723,30 +1852,43 @@ class _SliverComicSourceState extends State<_SliverComicSource> {
             trailing: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Tooltip(
-                  message: "Edit".tl,
-                  child: IconButton(
-                    onPressed: updateState == null
-                        ? () => widget.edit(source)
-                        : null,
-                    icon: const Icon(Icons.edit_note),
-                  ),
+                PopupMenuButton<String>(
+                  tooltip: 'More'.tl,
+                  onSelected: (value) {
+                    switch (value) {
+                      case 'settings':
+                        setState(() => expanded = true);
+                      case 'edit':
+                        widget.edit(source);
+                      case 'update':
+                        widget.update(source);
+                      case 'delete':
+                        widget.delete(source);
+                    }
+                  },
+                  itemBuilder: (_) => [
+                    PopupMenuItem(
+                      value: 'settings',
+                      child: Text('Source settings'.tl),
+                    ),
+                    if (source is! MihonSource)
+                      PopupMenuItem(
+                        value: 'edit',
+                        enabled: updateState == null,
+                        child: Text('Edit config'.tl),
+                      ),
+                    PopupMenuItem(value: 'update', child: Text('Update'.tl)),
+                    PopupMenuItem(
+                      value: 'delete',
+                      enabled: updateState == null,
+                      child: Text('Delete'.tl),
+                    ),
+                  ],
                 ),
-                Tooltip(
-                  message: "Update".tl,
-                  child: IconButton(
-                    onPressed: () => widget.update(source),
-                    icon: const Icon(Icons.update),
-                  ),
-                ),
-                Tooltip(
-                  message: "Delete".tl,
-                  child: IconButton(
-                    onPressed: updateState == null
-                        ? () => widget.delete(source)
-                        : null,
-                    icon: const Icon(Icons.delete),
-                  ),
+                IconButton(
+                  tooltip: (expanded ? 'Collapse' : 'Source settings').tl,
+                  icon: Icon(expanded ? Icons.expand_less : Icons.expand_more),
+                  onPressed: () => setState(() => expanded = !expanded),
                 ),
               ],
             ),
@@ -1765,11 +1907,13 @@ class _SliverComicSourceState extends State<_SliverComicSource> {
             ),
           ),
         ),
-        SliverToBoxAdapter(
-          child: Column(children: buildSourceSettings().toList()),
-        ),
-        SliverToBoxAdapter(child: _SourceCheckTile(source: source)),
-        SliverToBoxAdapter(child: Column(children: _buildAccount().toList())),
+        if (expanded) ...[
+          SliverToBoxAdapter(
+            child: Column(children: buildSourceSettings().toList()),
+          ),
+          SliverToBoxAdapter(child: _SourceCheckTile(source: source)),
+          SliverToBoxAdapter(child: Column(children: _buildAccount().toList())),
+        ],
       ],
     );
   }

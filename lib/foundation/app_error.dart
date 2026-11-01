@@ -31,7 +31,7 @@ class AppErrorInfo {
     return status ??
         int.tryParse(
           RegExp(
-                r'(?:invalid\s+status\s+code\s*:?\s*|status\s+code\s+(?:of\s+)?|statuscode\s*[:=]\s*|http\s+)(\d{3})\b',
+                r'(?:invalid\s+status\s+code\s*:?\s*|status\s+code\s+(?:of\s+)?|statuscode\s*[:=]\s*|http(?:\s+error)?\s+)(\d{3})\b',
                 caseSensitive: false,
               ).firstMatch(raw)?.group(1) ??
               '',
@@ -42,6 +42,41 @@ class AppErrorInfo {
     final raw = error.toString();
     final text = raw.toLowerCase();
     final status = statusCode(error);
+    if (text.contains('requires an http proxy')) {
+      return const AppErrorInfo(
+        'Proxy configuration is unsupported',
+        'Use an HTTP proxy server or switch to a direct connection in network settings.',
+      );
+    }
+    if (text.contains('requires a newer android version')) {
+      return const AppErrorInfo(
+        'Extension is incompatible',
+        'Update Android or choose an older version of this source extension.',
+      );
+    }
+    if (text.contains('extension signature changed')) {
+      return const AppErrorInfo(
+        'Extension signature changed',
+        'Use an update from the extension’s original repository.',
+      );
+    }
+    if (text.contains('unsupported mihon extension api') ||
+        text.contains('noclassdeffounderror') ||
+        text.contains('nosuchmethoderror') ||
+        text.contains('classnotfoundexception')) {
+      return const AppErrorInfo(
+        'Extension is incompatible',
+        'Update this source extension and try again.',
+      );
+    }
+    if (text.contains('invalid extension apk') ||
+        text.contains('not a mihon extension') ||
+        text.contains('extension package does not match')) {
+      return const AppErrorInfo(
+        'Invalid source file',
+        'Download the source again from its repository.',
+      );
+    }
     if (text.contains('cloudflare') &&
         (text.contains('exception') || text.contains('verification'))) {
       return const AppErrorInfo(
@@ -146,6 +181,9 @@ class AppErrorInfo {
     if (text.contains('timeout') ||
         text.contains('timed out') ||
         text.contains('socketexception') ||
+        text.contains('unknownhostexception') ||
+        text.contains('connectexception') ||
+        text.contains('unable to resolve host') ||
         text.contains('connection error') ||
         text.contains('connection reset') ||
         text.contains('failed host lookup') ||

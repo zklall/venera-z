@@ -21,6 +21,10 @@ Venera Z 是基于 Venera Prime 的漫画阅读器，支持本地漫画和网络
 3. Install rust, see [rustup.rs](https://rustup.rs/)
 4. Build for your platform: e.g. `flutter build apk`
 
+## Mihon 漫画源（Android）
+
+在原有漫画源页面导入扩展仓库链接或 APK。详见[兼容范围与操作](doc/mihon-compatibility.md)。
+
 ## Create a new comic source
 See [Comic Source](doc/comic_source.md)
 

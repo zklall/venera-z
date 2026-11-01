@@ -24,6 +24,7 @@ import '../source_recovery.dart';
 import '../js_engine.dart';
 import '../log.dart';
 import 'source_library.dart';
+import 'mihon_source.dart';
 
 part 'category.dart';
 
@@ -59,7 +60,6 @@ class ComicSourceManager with ChangeNotifier, Init {
     final path = "${App.dataPath}/comic_source";
     if (!(await Directory(path).exists())) {
       await Directory(path).create(recursive: true);
-      return;
     }
     await JsEngine().ensureInit();
     await for (var entity in Directory(path).list()) {
@@ -73,6 +73,13 @@ class ComicSourceManager with ChangeNotifier, Init {
         } catch (e, s) {
           Log.error("ComicSource", "$e\n$s");
         }
+      }
+    }
+    if (App.isAndroid) {
+      try {
+        _sources.addAll(await MihonSource.loadInstalledSources());
+      } catch (error, stack) {
+        Log.error('Mihon', '$error\n$stack');
       }
     }
     _sortSourcesByPreference();

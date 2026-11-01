@@ -4,6 +4,7 @@ import 'package:crypto/crypto.dart';
 import 'package:flutter/foundation.dart';
 import 'package:venera/foundation/appdata.dart';
 import 'package:venera/foundation/comic_source/comic_source.dart';
+import 'mihon_source.dart';
 
 T? _firstOrNull<T>(Iterable<T> values) {
   final iterator = values.iterator;
@@ -180,6 +181,7 @@ ComicSourceLibrary? findLibraryByUrl(
 /// Persists source catalogs and source-to-catalog provenance in appdata.
 class ComicSourceLibraryManager {
   static bool isUnbound(String sourceKey) {
+    if (ComicSource.find(sourceKey) is MihonSource) return false;
     final origin = provenanceFor(sourceKey)?.originId;
     return origin == null || find(origin) == null;
   }

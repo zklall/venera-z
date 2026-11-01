@@ -6,6 +6,7 @@ import 'package:venera/foundation/app.dart';
 import 'package:venera/foundation/appdata.dart';
 import 'package:venera/foundation/background_tasks.dart';
 import 'package:venera/foundation/comic_source/comic_source.dart';
+import 'package:venera/foundation/comic_source/mihon_source.dart';
 import 'package:venera/foundation/comic_source/source_library.dart';
 import 'package:venera/pages/comic_source_page.dart';
 import 'package:venera/utils/translations.dart';
@@ -65,6 +66,46 @@ void main() {
     await appdata.saveData(false);
     await directory.delete(recursive: true);
   });
+
+  test(
+    'Mihon updates follow package identity when the APK filename changes',
+    () async {
+      final source = MihonSource({
+        'id': '900001',
+        'name': 'Example',
+        'lang': 'zh',
+        'package': 'eu.example.source',
+        'version': '1.6.1',
+      });
+      ComicSourceManager().add(source);
+      addTearDown(() => ComicSourceManager().remove(source.key));
+      ComicSourceLibraryManager.recordOrigin(
+        source.key,
+        'origin',
+        sourceFileName: 'source-v1.6.1.apk',
+      );
+      const newUrl = 'https://origin.invalid/apk/source-v1.6.2.apk';
+      final count = await ComicSourcePage.checkComicSourceUpdate(
+        loadCatalog: (library) async => library.id == 'origin'
+            ? [
+                {
+                  '_format': 'mihon',
+                  'key': 'eu.example.source',
+                  'version': '1.6.2',
+                  'url': newUrl,
+                },
+              ]
+            : [],
+      );
+      expect(count, 1);
+      expect(ComicSourceManager().availableUpdates[source.key], '1.6.2');
+      expect(ComicSourceManager().updateUrlFor(source.key), newUrl);
+      expect(
+        ComicSourceManager().provenanceFor(source.key)!.sourceFileName,
+        'source-v1.6.2.apk',
+      );
+    },
+  );
 
   test(
     'catalog case mismatch still finds updates without renaming installed source',

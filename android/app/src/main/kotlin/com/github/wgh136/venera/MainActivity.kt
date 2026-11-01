@@ -39,6 +39,7 @@ import java.io.IOException
 import java.util.concurrent.atomic.AtomicInteger
 
 class MainActivity : FlutterFragmentActivity() {
+    private var mihonChannel: MihonChannel? = null
     var volumeListen = VolumeListen()
     var listening = false
 
@@ -108,6 +109,12 @@ class MainActivity : FlutterFragmentActivity() {
         launcher.launch(input)
     }
 
+    override fun cleanUpFlutterEngine(flutterEngine: FlutterEngine) {
+        mihonChannel?.close()
+        mihonChannel = null
+        super.cleanUpFlutterEngine(flutterEngine)
+    }
+
     private fun findFlutterView(view: View): FlutterView? {
         if (view is FlutterView) return view
         if (view is ViewGroup) {
@@ -120,6 +127,8 @@ class MainActivity : FlutterFragmentActivity() {
 
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         GeneratedPluginRegistrant.registerWith(flutterEngine)
+        mihonChannel?.close()
+        mihonChannel = MihonChannel(this, flutterEngine.dartExecutor.binaryMessenger)
         MethodChannel(
             flutterEngine.dartExecutor.binaryMessenger,
             "venera/method_channel"

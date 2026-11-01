@@ -9,6 +9,7 @@ import 'package:venera/utils/image.dart';
 import 'package:venera/utils/file_type.dart';
 
 import 'app_dio.dart';
+import '../foundation/comic_source/mihon_source.dart';
 import '../foundation/source_recovery.dart';
 
 abstract class ImageDownloader {
@@ -33,6 +34,17 @@ abstract class ImageDownloader {
       }
     }
 
+    final nativeSource = sourceKey == null ? null : ComicSource.find(sourceKey);
+    if (nativeSource is MihonSource) {
+      final bytes = await nativeSource.image(url, thumbnail: true);
+      await CacheManager().writeCache(cacheKey, bytes);
+      yield ImageDownloadProgress(
+        currentBytes: bytes.length,
+        totalBytes: bytes.length,
+        imageBytes: bytes,
+      );
+      return;
+    }
     var configs = <String, dynamic>{};
     if (sourceKey != null) {
       var comicSource = ComicSource.find(sourceKey);
@@ -225,6 +237,17 @@ abstract class ImageDownloader {
       }
     }
 
+    final nativeSource = sourceKey == null ? null : ComicSource.find(sourceKey);
+    if (nativeSource is MihonSource) {
+      final bytes = await nativeSource.image(imageKey);
+      if (cacheResult) await CacheManager().writeCache(cacheKey, bytes);
+      yield ImageDownloadProgress(
+        currentBytes: bytes.length,
+        totalBytes: bytes.length,
+        imageBytes: bytes,
+      );
+      return;
+    }
     Future<Map<String, dynamic>?> Function()? onLoadFailed;
 
     var configs = <String, dynamic>{};

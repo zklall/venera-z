@@ -1,0 +1,3 @@
+<resources>
+    <string name="mihon_settings_error">Source settings could not be loaded. Update the source and try again.</string>
+</resources>

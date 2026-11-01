@@ -1,0 +1,45 @@
+plugins {
+    id 'com.android.library'
+    id 'org.jetbrains.kotlin.android'
+    id 'org.jetbrains.kotlin.plugin.serialization'
+}
+android {
+    namespace 'com.github.veneraz.mihon'
+    compileSdk 36
+    defaultConfig { minSdk 24; testInstrumentationRunner 'androidx.test.runner.AndroidJUnitRunner'; consumerProguardFiles 'consumer-rules.pro' }
+    compileOptions { sourceCompatibility JavaVersion.VERSION_17; targetCompatibility JavaVersion.VERSION_17 }
+    kotlinOptions { jvmTarget = '17'; freeCompilerArgs += ['-Xcontext-parameters'] }
+    testOptions { unitTests.returnDefaultValues = true }
+    sourceSets.androidTest.assets.srcDir(layout.buildDirectory.dir('generated/fixture-assets'))
+}
+dependencies {
+    api 'org.jetbrains.kotlinx:kotlinx-coroutines-android:1.11.0'
+    api 'org.jetbrains.kotlinx:kotlinx-serialization-json:1.12.0'
+    api 'org.jetbrains.kotlinx:kotlinx-serialization-json-okio:1.12.0'
+    api 'org.jetbrains.kotlinx:kotlinx-serialization-protobuf:1.12.0'
+    api 'com.squareup.okhttp3:okhttp:5.4.0'
+    api 'com.squareup.okhttp3:okhttp-brotli:5.4.0'
+    api 'org.jsoup:jsoup:1.23.2'
+    api 'io.reactivex:rxjava:1.3.8'
+    api 'uy.kohesive.injekt:injekt-core:1.16.1'
+    api 'androidx.preference:preference-ktx:1.2.1'
+    implementation 'androidx.lifecycle:lifecycle-runtime-ktx:2.9.1'
+    implementation 'androidx.appcompat:appcompat:1.7.1'
+    implementation 'org.jetbrains.kotlin:kotlin-reflect:2.4.21'
+    implementation 'com.android.tools.build:apksig:8.12.3'
+    implementation 'com.github.zhanghai.quickjs-java:quickjs-android:547f5b1597'
+    androidTestImplementation 'androidx.test:runner:1.6.2'
+    androidTestImplementation 'androidx.test.ext:junit:1.2.1'
+    testImplementation 'junit:junit:4.13.2'
+    testImplementation 'com.squareup.okhttp3:mockwebserver:5.4.0'
+}
+
+tasks.register('copyFixtureApk', Copy) {
+    dependsOn ':mihon-fixture:assembleDebug'
+    from(project(':mihon-fixture').layout.buildDirectory.dir('outputs/apk/debug')) { include '*.apk'; rename { 'fixture.apk' } }
+    if (project.hasProperty('realMihonApk')) from(project.property('realMihonApk')) { rename { 'real-extension.apk' } }
+    into(layout.buildDirectory.dir('generated/fixture-assets'))
+}
+tasks.configureEach { task ->
+    if (task.name == 'mergeDebugAndroidTestAssets') task.dependsOn('copyFixtureApk')
+}

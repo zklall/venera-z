@@ -1,0 +1,4 @@
+Mihon source API and HTTP helpers
+Copyright Mihon and Tachiyomi contributors. Apache License 2.0.
+Source: https://github.com/mihonapp/mihon/tree/e588e04359fe1058206a2cbac1b01018ad787359
+Adaptations: standalone host networking and Venera bridge; Compose stability annotations removed.
