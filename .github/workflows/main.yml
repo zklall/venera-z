@@ -1,8 +1,6 @@
 name: Build ALL
 run-name: Build ALL
 on:
-  pull_request:
-    branches: [master]
   workflow_dispatch:
     inputs:
       build_macos:
