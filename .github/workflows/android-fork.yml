@@ -23,7 +23,7 @@ on:
         default: ''
 
 permissions:
-  contents: read
+  contents: write
   actions: write
 
 jobs:
@@ -216,7 +216,8 @@ jobs:
           set -euo pipefail
           test -n "$FORK_RELEASE_TAG"
           run="$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$FORK_SOURCE_RUN_ID")"
-          test "$(jq -r .head_sha <<< "$run")" = "$GITHUB_SHA"
+          release_sha="$(gh api "repos/$GITHUB_REPOSITORY/git/ref/tags/$FORK_RELEASE_TAG" --jq .object.sha)"
+          test "$(jq -r .head_sha <<< "$run")" = "$release_sha"
           test "$(jq -r .path <<< "$run")" = '.github/workflows/android-fork.yml'
           test "$(jq -r .conclusion <<< "$run")" = success
           gh workflow run main.yml --repo "$GITHUB_REPOSITORY" --ref "$FORK_RELEASE_TAG" \
